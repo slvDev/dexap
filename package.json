@@ -17,8 +17,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "tsx watch src/example.ts",
-    "start": "tsx src/example.ts"
+    "example:basic": "tsx src/examples/basic.ts",
+    "example:multi": "tsx src/examples/multi-pairs.ts"
   },
   "keywords": [],
   "author": "",
