@@ -9,4 +9,12 @@ export interface PriceResult {
   amountOut: string;
   price: string;
   formatted: string;
+  feeTier: number;
+}
+
+export interface FeeTierQuote {
+  feeTier: number;
+  amountOut: bigint;
+  price: number;
+  formatted: string;
 }

@@ -1,7 +1,9 @@
 import { createPublicClient, http, formatUnits, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
-import { Token, PriceResult } from "./types";
+import { Token, PriceResult, FeeTierQuote } from "./types";
 import { quoterAbi } from "./abis/quoter";
+
+export const FEE_TIERS = [100, 500, 3000, 10000];
 
 // Uniswap V3 QuoterV2
 const QUOTER_ADDRESS = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e";
@@ -31,32 +33,78 @@ export async function getPrice(
 
   const amountInWei = parseUnits(amountIn, tokenIn.decimals);
 
-  const result = await client.readContract({
-    address: QUOTER_ADDRESS,
-    abi: quoterAbi,
-    functionName: "quoteExactInputSingle",
-    args: [
-      {
-        tokenIn: tokenIn.address,
-        tokenOut: tokenOut.address,
-        amountIn: amountInWei,
-        fee: 500, // 0.05%
-        sqrtPriceLimitX96: BigInt(0),
-      },
-    ],
-  });
+  console.log(`Checking ${FEE_TIERS.length} fee tiers...`);
 
-  const amountOut = result[0] as bigint;
+  const results = await Promise.all(
+    FEE_TIERS.map((feeTier) =>
+      tryFeeTier(client, tokenIn, tokenOut, amountInWei, feeTier)
+    )
+  );
+  console.log(results);
 
-  const amountInFormatted = formatUnits(amountInWei, tokenIn.decimals);
-  const amountOutFormatted = formatUnits(amountOut, tokenOut.decimals);
+  const validQuotes = results.filter((f) => f !== null) as FeeTierQuote[];
 
-  const price = Number(amountOutFormatted) / Number(amountInFormatted);
+  if (validQuotes.length === 0) {
+    throw new Error(
+      `No liquidity found for ${tokenIn.symbol}/${tokenOut.symbol}`
+    );
+  }
+
+  const best = validQuotes.reduce((best, current) =>
+    current.amountOut > best.amountOut ? current : best
+  );
+
+  console.log(
+    `Found ${validQuotes.length} pools, best: ${best.feeTier / 10000}% fee`
+  );
 
   return {
     amountIn: amountInWei.toString(),
-    amountOut: amountOut.toString(),
-    price: price.toString(),
-    formatted: `1 ${tokenIn.symbol} = ${price.toFixed(2)} ${tokenOut.symbol}`,
+    amountOut: best.amountOut.toString(),
+    price: best.price.toString(),
+    formatted: best.formatted,
+    feeTier: best.feeTier,
   };
+}
+
+async function tryFeeTier(
+  client: any,
+  tokenIn: Token,
+  tokenOut: Token,
+  amountInWei: bigint,
+  feeTier: number
+): Promise<FeeTierQuote | null> {
+  try {
+    const result = await client.readContract({
+      address: QUOTER_ADDRESS,
+      abi: quoterAbi,
+      functionName: "quoteExactInputSingle",
+      args: [
+        {
+          tokenIn: tokenIn.address,
+          tokenOut: tokenOut.address,
+          amountIn: amountInWei,
+          fee: feeTier,
+          sqrtPriceLimitX96: BigInt(0),
+        },
+      ],
+    });
+
+    const amountOut = result[0] as bigint;
+    const price =
+      Number(formatUnits(amountOut, tokenOut.decimals)) /
+      Number(formatUnits(amountInWei, tokenIn.decimals));
+
+    return {
+      feeTier,
+      amountOut,
+      price,
+      formatted: `1 ${tokenIn.symbol} = ${price.toFixed(2)} ${
+        tokenOut.symbol
+      } (${feeTier / 10000}% fee)`,
+    };
+  } catch (error) {
+    // Pool doesn't exist or has no liquidity
+    return null;
+  }
 }
