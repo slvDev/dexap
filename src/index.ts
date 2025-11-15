@@ -1,6 +1,6 @@
 import { createPublicClient, http, formatUnits, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
-import { Token, PriceResult, FeeTierQuote } from "./types";
+import { Token, PriceResult, FeeTierQuote, QuoterV2Response } from "./types";
 import { quoterAbi } from "./abis/quoter";
 
 export const FEE_TIERS = [100, 500, 3000, 10000];
@@ -23,7 +23,7 @@ export const USDC: Token = {
 export async function getPrice(
   tokenIn: Token,
   tokenOut: Token,
-  amountIn: string = "1",
+  amountIn: string,
   rpcUrl: string
 ): Promise<PriceResult> {
   const client = createPublicClient({
@@ -35,14 +35,46 @@ export async function getPrice(
 
   console.log(`Checking ${FEE_TIERS.length} fee tiers...`);
 
-  const results = await Promise.all(
-    FEE_TIERS.map((feeTier) =>
-      tryFeeTier(client, tokenIn, tokenOut, amountInWei, feeTier)
-    )
-  );
-  console.log(results);
+  const res = await client.multicall({
+    contracts: FEE_TIERS.map((feeTier) => ({
+      address: QUOTER_ADDRESS as `0x${string}`,
+      abi: quoterAbi,
+      functionName: "quoteExactInputSingle",
+      args: [
+        {
+          tokenIn: tokenIn.address,
+          tokenOut: tokenOut.address,
+          amountIn: amountInWei,
+          fee: feeTier,
+          sqrtPriceLimitX96: BigInt(0),
+        },
+      ],
+    })),
+    allowFailure: true,
+  });
 
-  const validQuotes = results.filter((f) => f !== null) as FeeTierQuote[];
+  const validQuotes: FeeTierQuote[] = res
+    .map((call, index) => {
+      if (call.status === "failure") {
+        return null;
+      }
+
+      const feeTier = FEE_TIERS[index];
+      const [amountOut] = call.result as QuoterV2Response;
+      const price =
+        Number(formatUnits(amountOut, tokenOut.decimals)) /
+        Number(formatUnits(amountInWei, tokenIn.decimals));
+
+      return {
+        feeTier,
+        amountOut,
+        price,
+        formatted: `1 ${tokenIn.symbol} = ${price.toFixed(2)} ${
+          tokenOut.symbol
+        } (${feeTier / 10000}% fee)`,
+      };
+    })
+    .filter((q) => q !== null);
 
   if (validQuotes.length === 0) {
     throw new Error(
@@ -65,46 +97,4 @@ export async function getPrice(
     formatted: best.formatted,
     feeTier: best.feeTier,
   };
-}
-
-async function tryFeeTier(
-  client: any,
-  tokenIn: Token,
-  tokenOut: Token,
-  amountInWei: bigint,
-  feeTier: number
-): Promise<FeeTierQuote | null> {
-  try {
-    const result = await client.readContract({
-      address: QUOTER_ADDRESS,
-      abi: quoterAbi,
-      functionName: "quoteExactInputSingle",
-      args: [
-        {
-          tokenIn: tokenIn.address,
-          tokenOut: tokenOut.address,
-          amountIn: amountInWei,
-          fee: feeTier,
-          sqrtPriceLimitX96: BigInt(0),
-        },
-      ],
-    });
-
-    const amountOut = result[0] as bigint;
-    const price =
-      Number(formatUnits(amountOut, tokenOut.decimals)) /
-      Number(formatUnits(amountInWei, tokenIn.decimals));
-
-    return {
-      feeTier,
-      amountOut,
-      price,
-      formatted: `1 ${tokenIn.symbol} = ${price.toFixed(2)} ${
-        tokenOut.symbol
-      } (${feeTier / 10000}% fee)`,
-    };
-  } catch (error) {
-    // Pool doesn't exist or has no liquidity
-    return null;
-  }
 }

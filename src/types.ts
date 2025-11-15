@@ -18,3 +18,10 @@ export interface FeeTierQuote {
   price: number;
   formatted: string;
 }
+
+export type QuoterV2Response = readonly [
+  amountOut: bigint,
+  sqrtPriceX96After: bigint,
+  initializedTicksCrossed: number,
+  gasEstimate: bigint
+];
