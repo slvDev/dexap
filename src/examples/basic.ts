@@ -1,4 +1,4 @@
-import { getPrice, WETH, USDC } from "./index";
+import { getPrice, WETH, USDC } from "../index";
 
 const RPC_URL = "https://eth-mainnet.g.alchemy.com/v2/API_KEY";
 

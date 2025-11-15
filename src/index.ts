@@ -2,23 +2,11 @@ import { createPublicClient, http, formatUnits, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { Token, PriceResult, FeeTierQuote, QuoterV2Response } from "./types";
 import { quoterAbi } from "./abis/quoter";
+import { FEE_TIERS, QUOTER_ADDRESS } from "./constants";
 
-export const FEE_TIERS = [100, 500, 3000, 10000];
-
-// Uniswap V3 QuoterV2
-const QUOTER_ADDRESS = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e";
-
-export const WETH: Token = {
-  address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-  symbol: "WETH",
-  decimals: 18,
-};
-
-export const USDC: Token = {
-  address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-  symbol: "USDC",
-  decimals: 6,
-};
+export * from "./types";
+export * from "./constants";
+export * from "./tokens";
 
 export async function getPrice(
   tokenIn: Token,
@@ -32,8 +20,6 @@ export async function getPrice(
   });
 
   const amountInWei = parseUnits(amountIn, tokenIn.decimals);
-
-  console.log(`Checking ${FEE_TIERS.length} fee tiers...`);
 
   const res = await client.multicall({
     contracts: FEE_TIERS.map((feeTier) => ({
@@ -87,7 +73,9 @@ export async function getPrice(
   );
 
   console.log(
-    `Found ${validQuotes.length} pools, best: ${best.feeTier / 10000}% fee`
+    `Found ${validQuotes.length} pools for ${tokenIn.symbol}/${
+      tokenOut.symbol
+    }, best: ${best.feeTier / 10000}% fee`
   );
 
   return {
