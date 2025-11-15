@@ -1,4 +1,28 @@
 {
+  "name": "unnamed-project",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/example.ts",
+    "start": "tsx src/example.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "viem": "^2.39.0"
   },
