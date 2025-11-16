@@ -1,12 +1,15 @@
 import { createPublicClient, http, formatUnits, parseUnits } from "viem";
-import { mainnet } from "viem/chains";
 import { Token, PriceResult, FeeTierQuote, QuoterV2Response } from "./types";
 import { quoterAbi } from "./abis/quoter";
-import { FEE_TIERS, QUOTER_ADDRESS } from "./constants";
+import { FEE_TIERS, getQuoterAddress } from "./constants";
+import { getViemChain } from "./utils/viemChains";
+import { getChainNameById } from "./chains/registry";
 
 export * from "./types";
 export * from "./constants";
 export * from "./tokens";
+export * from "./chains/registry";
+export * from "./utils/viemChains";
 
 export async function getPrice(
   tokenIn: Token,
@@ -14,16 +17,25 @@ export async function getPrice(
   amountIn: string,
   rpcUrl: string
 ): Promise<PriceResult> {
+  // Validate tokens are on the same chain
+  if (tokenIn.chainId !== tokenOut.chainId) {
+    throw new Error(
+      `Tokens must be on the same chain. TokenIn is on chain ${tokenIn.chainId}, tokenOut is on chain ${tokenOut.chainId}`
+    );
+  }
+
+  const viemChain = getViemChain(tokenIn.chainId);
   const client = createPublicClient({
-    chain: mainnet,
+    chain: viemChain,
     transport: http(rpcUrl),
   });
 
   const amountInWei = parseUnits(amountIn, tokenIn.decimals);
+  const quoterAddress = getQuoterAddress(tokenIn.chainId);
 
   const res = await client.multicall({
     contracts: FEE_TIERS.map((feeTier) => ({
-      address: QUOTER_ADDRESS as `0x${string}`,
+      address: quoterAddress as `0x${string}`,
       abi: quoterAbi,
       functionName: "quoteExactInputSingle",
       args: [
@@ -73,9 +85,11 @@ export async function getPrice(
   );
 
   console.log(
-    `Found ${validQuotes.length} pools for ${tokenIn.symbol}/${
-      tokenOut.symbol
-    }, best: ${best.feeTier / 10000}% fee`
+    `[${getChainNameById(tokenIn.chainId)}] Found ${
+      validQuotes.length
+    } pools for ${tokenIn.symbol}/${tokenOut.symbol}, best: ${
+      best.feeTier / 10000
+    }% fee`
   );
 
   return {
@@ -84,5 +98,6 @@ export async function getPrice(
     price: best.price.toString(),
     formatted: best.formatted,
     feeTier: best.feeTier,
+    chainId: tokenIn.chainId,
   };
 }

@@ -18,7 +18,8 @@
   "scripts": {
     "build": "tsup",
     "example:basic": "tsx src/examples/basic.ts",
-    "example:multi": "tsx src/examples/multi-pairs.ts"
+    "example:multi": "tsx src/examples/multi-pairs.ts",
+    "example:multi-chain": "tsx src/examples/multi-chain-usage.ts"
   },
   "keywords": [],
   "author": "",

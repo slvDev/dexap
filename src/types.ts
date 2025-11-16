@@ -1,7 +1,19 @@
+export enum ChainId {
+  ETHEREUM = 1,
+  BSC = 56,
+  POLYGON = 137,
+  ARBITRUM = 42161,
+  OPTIMISM = 10,
+  BASE = 8453,
+  AVALANCHE = 43114,
+}
+
 export interface Token {
-  address: `0x${string}`;
+  name: string;
   symbol: string;
   decimals: number;
+  address: `0x${string}`;
+  chainId: ChainId;
 }
 
 export interface PriceResult {
@@ -10,6 +22,7 @@ export interface PriceResult {
   price: string;
   formatted: string;
   feeTier: number;
+  chainId: ChainId;
 }
 
 export interface FeeTierQuote {
@@ -25,3 +38,15 @@ export type QuoterV2Response = readonly [
   initializedTicksCrossed: number,
   gasEstimate: bigint
 ];
+
+export enum DexType {
+  UNISWAP_V3 = "uniswap-v3",
+}
+
+export interface ChainConfig {
+  chainId: ChainId;
+  name: string;
+  nativeWrappedToken: Token;
+  explorerUrl: string;
+  supportedDexes: DexType[];
+}

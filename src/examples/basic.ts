@@ -1,4 +1,4 @@
-import { getPrice, WETH, USDC } from "../index";
+import { getPrice, ChainId, getWETH, getUSDC } from "../index";
 
 const RPC_URL = "https://eth-mainnet.g.alchemy.com/v2/API_KEY";
 
@@ -6,7 +6,12 @@ async function main() {
   console.log("Fetching best WETH/USDC price across all fee tiers...\n");
 
   try {
-    const result = await getPrice(WETH, USDC, "1", RPC_URL);
+    const result = await getPrice(
+      getWETH(ChainId.ETHEREUM),
+      getUSDC(ChainId.ETHEREUM),
+      "1",
+      RPC_URL
+    );
 
     console.log("\nBest Price\n");
     console.log("Price:", result.formatted);
