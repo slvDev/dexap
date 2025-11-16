@@ -1,0 +1,110 @@
+import { getPrice, USDC, WETH } from "..";
+import { getChainName, getSupportedChains } from "../chains/registry";
+import { ChainId } from "../types";
+
+const ALCHEMY_KEY = "API_KEY";
+
+// Amount of TokenIn to use for price quotes
+const AMOUNT_IN = "1";
+
+const RPC_URLS: Record<number, string> = {
+  [ChainId.ETHEREUM]: `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [ChainId.BSC]: `https://bnb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [ChainId.POLYGON]: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [ChainId.ARBITRUM]: `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [ChainId.OPTIMISM]: `https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [ChainId.BASE]: `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [ChainId.AVALANCHE]: `https://avax-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+};
+
+async function main() {
+  console.log("Multi-Chain Price Comparison\n");
+
+  console.log("Supported Chains:");
+  const chains = getSupportedChains();
+  chains.forEach((chainId) => {
+    console.log(`${chainId}: ${getChainName(chainId)}`);
+  });
+
+  console.log(`\nWETH/USDC Prices Across Chains (for ${AMOUNT_IN} WETH):`);
+  const testChains = [
+    ChainId.ETHEREUM,
+    ChainId.BSC,
+    ChainId.POLYGON,
+    ChainId.ARBITRUM,
+    ChainId.OPTIMISM,
+    ChainId.BASE,
+    ChainId.AVALANCHE,
+  ];
+
+  const prices = await Promise.allSettled(
+    testChains.map(async (chainId) => {
+      const weth = WETH[chainId];
+      const usdc = USDC[chainId];
+      const rpcUrl = RPC_URLS[chainId];
+
+      if (!rpcUrl) {
+        throw new Error(`No RPC URL configured for chain ${chainId}`);
+      }
+
+      try {
+        const quote = await getPrice(weth, usdc, AMOUNT_IN, rpcUrl);
+
+        return {
+          chainId,
+          chainName: getChainName(chainId),
+          price: parseFloat(quote.price),
+          formatted: quote.formatted,
+        };
+      } catch (error) {
+        throw new Error(`Failed on ${getChainName(chainId)}: ${error}`);
+      }
+    })
+  );
+
+  const successfulPrices = prices
+    .filter((r): r is PromiseFulfilledResult<any> => r.status === "fulfilled")
+    .map((r) => r.value);
+
+  const failedPrices = prices
+    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+    .map((r) => r.reason);
+
+  if (failedPrices.length > 0) {
+    console.log("\nFailed chains:");
+    failedPrices.forEach((error) => {
+      console.log(`   ${error.message}`);
+    });
+    console.log("");
+  }
+
+  console.log("\nPrices:");
+
+  if (successfulPrices.length > 0) {
+    successfulPrices.forEach((result) => {
+      console.log(`${result.chainName}: $${result.price.toFixed(2)}`);
+    });
+    console.log("");
+
+    if (successfulPrices.length > 1) {
+      const priceValues = successfulPrices.map((p) => p.price);
+      const minPrice = Math.min(...priceValues);
+      const maxPrice = Math.max(...priceValues);
+      const delta = maxPrice - minPrice;
+      const deltaPercent = ((delta / minPrice) * 100).toFixed(2);
+
+      const minChain = successfulPrices.find((p) => p.price === minPrice)!;
+      const maxChain = successfulPrices.find((p) => p.price === maxPrice)!;
+
+      console.log("Price Range:");
+      console.log(`Min: $${minPrice.toFixed(2)} (${minChain.chainName})`);
+      console.log(`Max: $${maxPrice.toFixed(2)} (${maxChain.chainName})`);
+      console.log(`Delta: $${delta.toFixed(2)} (${deltaPercent}%)`);
+    }
+  }
+}
+
+main().catch((error) => {
+  console.error("Error:", error);
+  process.exit(1);
+});
