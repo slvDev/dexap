@@ -1,30 +1,34 @@
-import { getPrice, USDC, WETH } from "..";
-import { getChainName, getSupportedChains } from "../chains/registry";
+import { createClient, USDC, WETH } from "..";
+import { getChainName, getSupportedChainIds } from "../chains";
 import { ChainId } from "../types";
 
-const ALCHEMY_KEY = "API_KEY";
-
-// Amount of TokenIn to use for price quotes
 const AMOUNT_IN = "1";
-
-const RPC_URLS: Record<number, string> = {
-  [ChainId.ETHEREUM]: `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [ChainId.BSC]: `https://bnb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [ChainId.POLYGON]: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [ChainId.ARBITRUM]: `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [ChainId.OPTIMISM]: `https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [ChainId.BASE]: `https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [ChainId.AVALANCHE]: `https://avax-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-};
 
 async function main() {
   console.log("Multi-Chain Price Comparison\n");
 
   console.log("Supported Chains:");
-  const chains = getSupportedChains();
+  const chains = getSupportedChainIds();
   chains.forEach((chainId) => {
     console.log(`${chainId}: ${getChainName(chainId)}`);
   });
+
+  // Create client with default public RPCs
+  const client = createClient();
+
+  // Or configure with your own RPC URLs using chain keys:
+  // const client = createClient({
+  //   rpcUrls: {
+  //     mainnet: "https://custom.mainnet.rpc.com",
+  //     polygon: "https://custom.polygon.rpc.com",
+  //   },
+  // });
+
+  // Or use Alchemy/Infura:
+  // const client = createClient({
+  //   alchemyKey: "your-alchemy-key",
+  //   infuraKey: "your-infura-key",
+  // });
 
   console.log(`\nWETH/USDC Prices Across Chains (for ${AMOUNT_IN} WETH):`);
   const testChains = [
@@ -41,14 +45,9 @@ async function main() {
     testChains.map(async (chainId) => {
       const weth = WETH[chainId];
       const usdc = USDC[chainId];
-      const rpcUrl = RPC_URLS[chainId];
-
-      if (!rpcUrl) {
-        throw new Error(`No RPC URL configured for chain ${chainId}`);
-      }
 
       try {
-        const quote = await getPrice(weth, usdc, AMOUNT_IN, rpcUrl);
+        const quote = await client.getPrice(weth, usdc, AMOUNT_IN);
 
         return {
           chainId,
