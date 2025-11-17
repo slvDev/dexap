@@ -8,6 +8,15 @@ export enum ChainId {
   AVALANCHE = 43114,
 }
 
+export type ChainKey =
+  | "mainnet"
+  | "bsc"
+  | "polygon"
+  | "arbitrum"
+  | "optimism"
+  | "base"
+  | "avalanche";
+
 export interface Token {
   name: string;
   symbol: string;
@@ -45,8 +54,10 @@ export enum DexType {
 
 export interface ChainConfig {
   chainId: ChainId;
+  key: ChainKey;
   name: string;
   nativeWrappedToken: Token;
   explorerUrl: string;
   supportedDexes: DexType[];
+  publicRpcUrl: string;
 }
