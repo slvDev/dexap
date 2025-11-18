@@ -1,29 +1,98 @@
-import { Token } from "../index";
+import { TOKENS } from "./registry";
 import { ChainId } from "../types";
+import { getChainConfig, Token } from "../index";
 
-export * from "./native";
-export * from "./registry";
+export function getWrappedNativeToken(chainId: ChainId): Token | undefined {
+  const config = getChainConfig(chainId);
+  return TOKENS[chainId][config.wrappedNativeSymbol];
+}
 
-export const WBTC: Token = {
-  name: "Wrapped BTC",
-  symbol: "WBTC",
-  decimals: 8,
-  address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-  chainId: ChainId.ETHEREUM,
-};
+export function getToken(symbol: string, chainId: ChainId): Token | undefined {
+  const chainTokens = TOKENS[chainId];
+  if (!chainTokens) {
+    return undefined;
+  }
+  return chainTokens[symbol];
+}
 
-export const USDT: Token = {
-  name: "Tether USD",
-  symbol: "USDT",
-  decimals: 6,
-  address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-  chainId: ChainId.ETHEREUM,
-};
+export function getSupportedChains(symbol: string): ChainId[] {
+  const chains: ChainId[] = [];
 
-export const DAI: Token = {
-  name: "Dai Stablecoin",
-  symbol: "DAI",
-  decimals: 18,
-  address: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-  chainId: ChainId.ETHEREUM,
-};
+  for (const chainId of Object.keys(TOKENS)) {
+    const chain = Number(chainId) as ChainId;
+    if (TOKENS[chain][symbol]) {
+      chains.push(chain);
+    }
+  }
+
+  return chains;
+}
+
+export function isTokenAvailable(symbol: string, chainId: ChainId): boolean {
+  return getToken(symbol, chainId) !== undefined;
+}
+
+export function getTokenSymbolsAvailableOnChain(chainId: ChainId): string[] {
+  const chainTokens = TOKENS[chainId];
+  if (!chainTokens) {
+    return [];
+  }
+
+  return Object.keys(chainTokens);
+}
+
+export function getChainTokens(chainId: ChainId): Token[] {
+  const chainTokens = TOKENS[chainId];
+  if (!chainTokens) {
+    return [];
+  }
+
+  return Object.values(chainTokens).filter((t) => t !== undefined);
+}
+
+export function getAllTokenSymbols(): string[] {
+  const symbols = new Set<string>();
+
+  for (const chainTokens of Object.values(TOKENS)) {
+    for (const symbol of Object.keys(chainTokens)) {
+      symbols.add(symbol);
+    }
+  }
+
+  return Array.from(symbols).sort();
+}
+
+export function createToken(
+  address: string,
+  symbol: string,
+  name: string,
+  decimals: number,
+  chainId: ChainId
+): Token {
+  if (!address || !address.startsWith("0x") || address.length !== 42) {
+    throw new Error(`Invalid token address: ${address}`);
+  }
+
+  if (!symbol || symbol.length === 0) {
+    throw new Error("Token symbol cannot be empty");
+  }
+
+  if (decimals < 0 || decimals > 32) {
+    throw new Error(`Invalid decimals: ${decimals} (must be 0-32)`);
+  }
+
+  return {
+    address: address as `0x${string}`,
+    symbol,
+    name,
+    decimals,
+    chainId,
+  };
+}
+
+export function tokensEqual(token1: Token, token2: Token): boolean {
+  return (
+    token1.address.toLowerCase() === token2.address.toLowerCase() &&
+    token1.chainId === token2.chainId
+  );
+}
