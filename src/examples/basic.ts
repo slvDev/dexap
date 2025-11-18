@@ -1,4 +1,4 @@
-import { createClient, ChainId, getWETH, getUSDC } from "../index";
+import { createClient, ChainId, getWETH, getUSDC, DexType } from "../index";
 
 async function main() {
   console.log("Fetching best WETH/USDC price across all fee tiers...\n");
@@ -9,7 +9,8 @@ async function main() {
     const result = await client.getPrice(
       getWETH(ChainId.ETHEREUM),
       getUSDC(ChainId.ETHEREUM),
-      "1"
+      "1",
+      DexType.UNISWAP_V3
     );
 
     console.log("\nBest Price\n");
