@@ -1,4 +1,4 @@
-import { createClient, USDC, WETH } from "..";
+import { createClient, getToken } from "..";
 import { getChainName, getSupportedChainIds } from "../chains";
 import { ChainId, DexType } from "../types";
 
@@ -43,8 +43,8 @@ async function main() {
 
   const prices = await Promise.allSettled(
     testChains.map(async (chainId) => {
-      const weth = WETH[chainId];
-      const usdc = USDC[chainId];
+      const weth = getToken("WETH", chainId)!;
+      const usdc = getToken("USDC", chainId)!;
 
       try {
         const quote = await client.getPrice(
