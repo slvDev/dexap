@@ -1,15 +1,14 @@
-import { createClient, WETH, USDC, ChainId } from "../index";
+import { createClient, getToken, ChainId } from "../index";
 
 async function main() {
   console.log("Fetching prices from all DEXes...\n");
 
   const client = createClient();
 
-  const allPrices = await client.getPricesFromAllDexes(
-    WETH[ChainId.ETHEREUM],
-    USDC[ChainId.ETHEREUM],
-    "1"
-  );
+  const weth = getToken("WETH", ChainId.ETHEREUM)!;
+  const usdc = getToken("USDC", ChainId.ETHEREUM)!;
+
+  const allPrices = await client.getPricesFromAllDexes(weth, usdc, "1");
 
   console.log("Prices from all DEXes:");
   for (const price of allPrices) {
@@ -18,11 +17,7 @@ async function main() {
 
   console.log("\n---\n");
 
-  const bestPrice = await client.getBestPrice(
-    WETH[ChainId.ETHEREUM],
-    USDC[ChainId.ETHEREUM],
-    "1"
-  );
+  const bestPrice = await client.getBestPrice(weth, usdc, "1");
 
   console.log(`Best price: ${bestPrice.formatted}`);
   console.log(`DEX: ${bestPrice.dexType}`);
