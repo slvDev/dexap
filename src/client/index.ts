@@ -1,9 +1,9 @@
-import { createPublicClient, http, PublicClient } from "viem";
-import { ChainId, ChainKey, Token, PriceResult } from "../types";
+import { createPublicClient, http, parseUnits, PublicClient } from "viem";
+import { ChainId, ChainKey, Token, PriceResult, DexType } from "../types";
 import { getAllChainConfigs } from "../chains";
 import { getViemChain } from "../utils/viemChains";
-import { getPrice as getPriceImpl } from "./getPrice";
 import { getAlchemyUrl, getInfuraUrl } from "./providers";
+import { createAllDexAdapters, createDexAdapter } from "../dex";
 
 export interface ClientConfig {
   alchemyKey?: string;
@@ -66,11 +66,65 @@ export class Client {
   async getPrice(
     tokenIn: Token,
     tokenOut: Token,
-    amountIn: string
+    amountIn: string,
+    dexType: DexType
   ): Promise<PriceResult> {
     const client = this.getClient(tokenIn.chainId);
-    const rpcUrl = this.getRpcUrl(tokenIn.chainId);
-    return getPriceImpl(client, tokenIn, tokenOut, amountIn, rpcUrl);
+    const dexAdapter = createDexAdapter(tokenIn.chainId, dexType);
+    const amountInWei = parseUnits(amountIn, tokenIn.decimals);
+    const quote = await dexAdapter.getQuote(
+      client,
+      tokenIn,
+      tokenOut,
+      amountInWei
+    );
+    return quote;
+  }
+
+  async getPricesFromAllDexes(
+    tokenIn: Token,
+    tokenOut: Token,
+    amountIn: string
+  ): Promise<Array<PriceResult & { dexType: DexType }>> {
+    const client = this.getClient(tokenIn.chainId);
+    const amountInWei = parseUnits(amountIn, tokenIn.decimals);
+    const adapters = createAllDexAdapters(tokenIn.chainId);
+
+    const results = await Promise.allSettled(
+      adapters.map(async (adapter) => {
+        const result = await adapter.getQuote(
+          client,
+          tokenIn,
+          tokenOut,
+          amountInWei
+        );
+        return { ...result, dexType: adapter.config.protocol.type };
+      })
+    );
+
+    return results.filter((r) => r.status === "fulfilled").map((r) => r.value);
+  }
+
+  async getBestPrice(
+    tokenIn: Token,
+    tokenOut: Token,
+    amountIn: string
+  ): Promise<PriceResult & { dexType: DexType }> {
+    const prices = await this.getPricesFromAllDexes(
+      tokenIn,
+      tokenOut,
+      amountIn
+    );
+
+    if (prices.length === 0) {
+      throw new Error(
+        `No prices found for ${tokenIn.symbol}/${tokenOut.symbol} on chain ${tokenIn.chainId}`
+      );
+    }
+
+    return prices.reduce((best, current) =>
+      BigInt(current.amountOut) > BigInt(best.amountOut) ? current : best
+    );
   }
 }
 

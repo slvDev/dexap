@@ -1,3 +1,9 @@
+export enum DexType {
+  UNISWAP_V3 = "uniswap-v3",
+  //   PANCAKESWAP_V3 = "pancakeswap-v3",
+  //   SUSHISWAP_V3 = "sushiswap-v3",
+}
+
 export enum ChainId {
   ETHEREUM = 1,
   BSC = 56,
@@ -47,10 +53,6 @@ export type QuoterV2Response = readonly [
   initializedTicksCrossed: number,
   gasEstimate: bigint
 ];
-
-export enum DexType {
-  UNISWAP_V3 = "uniswap-v3",
-}
 
 export interface ChainConfig {
   chainId: ChainId;
