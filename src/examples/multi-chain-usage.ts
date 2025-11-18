@@ -1,6 +1,6 @@
 import { createClient, USDC, WETH } from "..";
 import { getChainName, getSupportedChainIds } from "../chains";
-import { ChainId } from "../types";
+import { ChainId, DexType } from "../types";
 
 const AMOUNT_IN = "1";
 
@@ -47,7 +47,12 @@ async function main() {
       const usdc = USDC[chainId];
 
       try {
-        const quote = await client.getPrice(weth, usdc, AMOUNT_IN);
+        const quote = await client.getPrice(
+          weth,
+          usdc,
+          AMOUNT_IN,
+          DexType.UNISWAP_V3
+        );
 
         return {
           chainId,
