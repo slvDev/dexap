@@ -57,7 +57,7 @@ async function main() {
         return {
           chainId,
           chainName: getChainName(chainId),
-          price: parseFloat(quote.price),
+          price: quote.price,
           formatted: quote.formatted,
         };
       } catch (error) {

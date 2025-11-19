@@ -21,7 +21,8 @@
     "example:best-price": "tsx src/examples/best-price.ts",
     "example:multi": "tsx src/examples/multi-pairs.ts",
     "example:multi-chain": "tsx src/examples/multi-chain-usage.ts",
-    "example:token-manager": "tsx src/examples/token-manager.ts"
+    "example:token-manager": "tsx src/examples/token-manager.ts",
+    "example:aggregation": "tsx src/examples/aggregation.ts"
   },
   "keywords": [],
   "author": "",

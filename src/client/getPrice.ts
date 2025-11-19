@@ -89,7 +89,7 @@ export async function getPrice(
   return {
     amountIn: amountInWei.toString(),
     amountOut: best.amountOut.toString(),
-    price: best.price.toString(),
+    price: best.price,
     formatted: best.formatted,
     feeTier: best.feeTier,
     chainId: tokenIn.chainId,

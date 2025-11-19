@@ -2,8 +2,8 @@ export type TokenRegistry = Record<ChainId, Partial<Record<string, Token>>>;
 
 export enum DexType {
   UNISWAP_V3 = "uniswap-v3",
-  //   PANCAKESWAP_V3 = "pancakeswap-v3",
-  //   SUSHISWAP_V3 = "sushiswap-v3",
+  SUSHISWAP_V3 = "sushiswap-v3",
+  PANCAKESWAP_V3 = "pancakeswap-v3",
 }
 
 export enum ChainId {
@@ -36,7 +36,7 @@ export interface Token {
 export interface PriceResult {
   amountIn: string;
   amountOut: string;
-  price: string;
+  price: number;
   formatted: string;
   feeTier: number;
   chainId: ChainId;
@@ -64,4 +64,17 @@ export interface ChainConfig {
   explorerUrl: string;
   supportedDexes: DexType[];
   publicRpcUrl: string;
+}
+
+export interface AggregatedPrice {
+  average: number;
+  median: number;
+  min: number;
+  max: number;
+  best: PriceResult & { dexType: DexType };
+  all: Array<PriceResult & { dexType: DexType }>;
+  tokenIn: Token;
+  tokenOut: Token;
+  chainId: ChainId;
+  timestamp: number;
 }
