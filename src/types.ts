@@ -36,7 +36,7 @@ export interface Token {
 export interface PriceResult {
   amountIn: string;
   amountOut: string;
-  price: string;
+  price: number;
   formatted: string;
   feeTier: number;
   chainId: ChainId;

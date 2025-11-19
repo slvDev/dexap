@@ -45,8 +45,6 @@ export class UniswapV3Adapter extends BaseDexAdapter {
         }
 
         const feeTier = this.config.feeTiers[index];
-        const result = call.result as QuoterV2Response;
-
         const [amountOut] = call.result as QuoterV2Response;
         const price =
           Number(formatUnits(amountOut, tokenOut.decimals)) /
@@ -82,7 +80,7 @@ export class UniswapV3Adapter extends BaseDexAdapter {
     return {
       amountIn: amountIn.toString(),
       amountOut: best.amountOut.toString(),
-      price: best.price.toString(),
+      price: best.price,
       formatted: best.formatted,
       feeTier: best.feeTier,
       chainId: this.config.chainId,
@@ -132,7 +130,7 @@ export class UniswapV3Adapter extends BaseDexAdapter {
     return {
       amountIn: amountIn.toString(),
       amountOut: amountOut.toString(),
-      price: price.toString(),
+      price,
       formatted: `1 ${tokenIn.symbol} = ${price.toFixed(2)} ${
         tokenOut.symbol
       } (${feeTier / 10000}% fee)`,
