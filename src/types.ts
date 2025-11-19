@@ -65,3 +65,16 @@ export interface ChainConfig {
   supportedDexes: DexType[];
   publicRpcUrl: string;
 }
+
+export interface AggregatedPrice {
+  average: number;
+  median: number;
+  min: number;
+  max: number;
+  best: PriceResult & { dexType: DexType };
+  all: Array<PriceResult & { dexType: DexType }>;
+  tokenIn: Token;
+  tokenOut: Token;
+  chainId: ChainId;
+  timestamp: number;
+}

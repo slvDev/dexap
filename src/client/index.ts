@@ -1,9 +1,17 @@
 import { createPublicClient, http, parseUnits, PublicClient } from "viem";
-import { ChainId, ChainKey, Token, PriceResult, DexType } from "../types";
+import {
+  ChainId,
+  ChainKey,
+  Token,
+  PriceResult,
+  DexType,
+  AggregatedPrice,
+} from "../types";
 import { getAllChainConfigs } from "../chains";
 import { getViemChain } from "../utils/viemChains";
 import { getAlchemyUrl, getInfuraUrl } from "./providers";
 import { createAllDexAdapters, createDexAdapter } from "../dex";
+import { calculateAggregatedPrice } from "../utils/aggregation";
 
 export interface ClientConfig {
   alchemyKey?: string;
@@ -125,6 +133,21 @@ export class Client {
     return prices.reduce((best, current) =>
       BigInt(current.amountOut) > BigInt(best.amountOut) ? current : best
     );
+  }
+
+  async getAggregatedPrice(
+    tokenIn: Token,
+    tokenOut: Token,
+    amountIn: string,
+    filterOutliers: boolean = true
+  ): Promise<AggregatedPrice> {
+    const quotes = await this.getPricesFromAllDexes(
+      tokenIn,
+      tokenOut,
+      amountIn
+    );
+
+    return calculateAggregatedPrice(quotes, tokenIn, tokenOut, filterOutliers);
   }
 }
 
