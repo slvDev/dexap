@@ -2,8 +2,8 @@ export type TokenRegistry = Record<ChainId, Partial<Record<string, Token>>>;
 
 export enum DexType {
   UNISWAP_V3 = "uniswap-v3",
-  //   PANCAKESWAP_V3 = "pancakeswap-v3",
-  //   SUSHISWAP_V3 = "sushiswap-v3",
+  SUSHISWAP_V3 = "sushiswap-v3",
+  PANCAKESWAP_V3 = "pancakeswap-v3",
 }
 
 export enum ChainId {

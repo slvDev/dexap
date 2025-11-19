@@ -5,6 +5,8 @@ import { UniswapV3Adapter } from "./adapters/uniswapV3";
 
 const DEX_ADAPTERS: Record<DexType, new (config: DexConfig) => IDexAdapter> = {
   [DexType.UNISWAP_V3]: UniswapV3Adapter,
+  [DexType.SUSHISWAP_V3]: UniswapV3Adapter,
+  [DexType.PANCAKESWAP_V3]: UniswapV3Adapter,
 };
 
 export function getDexConfig(chainId: ChainId, dexType: DexType): DexConfig {
