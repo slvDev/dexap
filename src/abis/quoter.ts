@@ -3,11 +3,15 @@ export const quoterAbi = [
     inputs: [
       {
         components: [
-          { name: "tokenIn", type: "address" },
-          { name: "tokenOut", type: "address" },
-          { name: "amountIn", type: "uint256" },
-          { name: "fee", type: "uint24" },
-          { name: "sqrtPriceLimitX96", type: "uint160" },
+          { internalType: "address", name: "tokenIn", type: "address" },
+          { internalType: "address", name: "tokenOut", type: "address" },
+          { internalType: "uint256", name: "amountIn", type: "uint256" },
+          { internalType: "uint24", name: "fee", type: "uint24" },
+          {
+            internalType: "uint160",
+            name: "sqrtPriceLimitX96",
+            type: "uint160",
+          },
         ],
         internalType: "struct IQuoterV2.QuoteExactInputSingleParams",
         name: "params",
@@ -16,10 +20,18 @@ export const quoterAbi = [
     ],
     name: "quoteExactInputSingle",
     outputs: [
-      { name: "amountOut", type: "uint256" },
-      { name: "sqrtPriceX96After", type: "uint160" },
-      { name: "initializedTicksCrossed", type: "uint32" },
-      { name: "gasEstimate", type: "uint256" },
+      { internalType: "uint256", name: "amountOut", type: "uint256" },
+      {
+        internalType: "uint160",
+        name: "sqrtPriceX96After",
+        type: "uint160",
+      },
+      {
+        internalType: "uint32",
+        name: "initializedTicksCrossed",
+        type: "uint32",
+      },
+      { internalType: "uint256", name: "gasEstimate", type: "uint256" },
     ],
     stateMutability: "nonpayable",
     type: "function",
