@@ -12,6 +12,43 @@ export class UniswapV3Adapter extends BaseDexAdapter {
   readonly quoterAbi = quoterAbi;
   private readonly SPOT_REFERENCE_AMOUNT = parseEther("0.001");
 
+  private buildQuoteContract(
+    tokenIn: Token,
+    tokenOut: Token,
+    amountIn: bigint,
+    feeTier: number
+  ) {
+    return {
+      address: this.config.quoterAddress,
+      abi: this.quoterAbi,
+      functionName: "quoteExactInputSingle" as const,
+      args: [
+        {
+          tokenIn: tokenIn.address,
+          tokenOut: tokenOut.address,
+          amountIn,
+          fee: feeTier,
+          sqrtPriceLimitX96: 0n,
+        },
+      ] as const,
+    };
+  }
+
+  private calculatePriceImpact(
+    spotCall: { status: string; result?: unknown },
+    amountOut: bigint,
+    amountIn: bigint
+  ): number {
+    if (spotCall.status !== "success") return 0;
+
+    const [spotAmountOut] = spotCall.result as QuoterV2Response;
+    const spotPrice = Number(spotAmountOut) / Number(this.SPOT_REFERENCE_AMOUNT);
+    const actualPrice = Number(amountOut) / Number(amountIn);
+
+    if (spotPrice <= 0) return 0;
+    return Math.max(0, ((spotPrice - actualPrice) / spotPrice) * 100);
+  }
+
   async getQuote(
     client: PublicClient,
     tokenIn: Token,
@@ -25,36 +62,12 @@ export class UniswapV3Adapter extends BaseDexAdapter {
     // Query all fee tiers using multicall + spot price queries for price impact
     const res = await client.multicall({
       contracts: [
-        // Actual amount queries
-        ...feeTiers.map((feeTier) => ({
-          address: this.config.quoterAddress,
-          abi: this.quoterAbi,
-          functionName: "quoteExactInputSingle",
-          args: [
-            {
-              tokenIn: tokenIn.address,
-              tokenOut: tokenOut.address,
-              amountIn,
-              fee: feeTier,
-              sqrtPriceLimitX96: 0n,
-            },
-          ],
-        })),
-        // Spot price queries (small amount) for price impact calculation
-        ...feeTiers.map((feeTier) => ({
-          address: this.config.quoterAddress,
-          abi: this.quoterAbi,
-          functionName: "quoteExactInputSingle",
-          args: [
-            {
-              tokenIn: tokenIn.address,
-              tokenOut: tokenOut.address,
-              amountIn: this.SPOT_REFERENCE_AMOUNT,
-              fee: feeTier,
-              sqrtPriceLimitX96: 0n,
-            },
-          ],
-        })),
+        ...feeTiers.map((feeTier) =>
+          this.buildQuoteContract(tokenIn, tokenOut, amountIn, feeTier)
+        ),
+        ...feeTiers.map((feeTier) =>
+          this.buildQuoteContract(tokenIn, tokenOut, this.SPOT_REFERENCE_AMOUNT, feeTier)
+        ),
       ],
       allowFailure: true,
     });
@@ -75,23 +88,11 @@ export class UniswapV3Adapter extends BaseDexAdapter {
           Number(formatUnits(amountOut, tokenOut.decimals)) /
           Number(formatUnits(amountIn, tokenIn.decimals));
 
-        // Calculate price impact from spot price
-        let priceImpact = 0;
-        const spotCall = spotResults[index];
-        if (spotCall.status === "success") {
-          const [spotAmountOut] = spotCall.result as QuoterV2Response;
-          // Spot price = output per unit input at reference amount
-          const spotPrice =
-            Number(spotAmountOut) / Number(this.SPOT_REFERENCE_AMOUNT);
-          // Actual price = output per unit input at actual amount
-          const actualPrice = Number(amountOut) / Number(amountIn);
-          if (spotPrice > 0) {
-            priceImpact = Math.max(
-              0,
-              ((spotPrice - actualPrice) / spotPrice) * 100
-            );
-          }
-        }
+        const priceImpact = this.calculatePriceImpact(
+          spotResults[index],
+          amountOut,
+          amountIn
+        );
 
         return {
           feeTier,
@@ -145,36 +146,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
 
     const res = await client.multicall({
       contracts: [
-        // Actual amount query
-        {
-          address: this.config.quoterAddress,
-          abi: this.quoterAbi,
-          functionName: "quoteExactInputSingle",
-          args: [
-            {
-              tokenIn: tokenIn.address,
-              tokenOut: tokenOut.address,
-              amountIn,
-              fee: feeTier,
-              sqrtPriceLimitX96: 0n,
-            },
-          ],
-        },
-        // Spot price query (small amount)
-        {
-          address: this.config.quoterAddress,
-          abi: this.quoterAbi,
-          functionName: "quoteExactInputSingle",
-          args: [
-            {
-              tokenIn: tokenIn.address,
-              tokenOut: tokenOut.address,
-              amountIn: this.SPOT_REFERENCE_AMOUNT,
-              fee: feeTier,
-              sqrtPriceLimitX96: 0n,
-            },
-          ],
-        },
+        this.buildQuoteContract(tokenIn, tokenOut, amountIn, feeTier),
+        this.buildQuoteContract(tokenIn, tokenOut, this.SPOT_REFERENCE_AMOUNT, feeTier),
       ],
       allowFailure: true,
     });
@@ -195,20 +168,7 @@ export class UniswapV3Adapter extends BaseDexAdapter {
       Number(formatUnits(amountOut, tokenOut.decimals)) /
       Number(formatUnits(amountIn, tokenIn.decimals));
 
-    // Calculate price impact
-    let priceImpact = 0;
-    if (spotCall.status === "success") {
-      const [spotAmountOut] = spotCall.result as QuoterV2Response;
-      const spotPrice =
-        Number(spotAmountOut) / Number(this.SPOT_REFERENCE_AMOUNT);
-      const actualPrice = Number(amountOut) / Number(amountIn);
-      if (spotPrice > 0) {
-        priceImpact = Math.max(
-          0,
-          ((spotPrice - actualPrice) / spotPrice) * 100
-        );
-      }
-    }
+    const priceImpact = this.calculatePriceImpact(spotCall, amountOut, amountIn);
 
     return {
       amountIn: amountIn.toString(),
