@@ -37,6 +37,16 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     supportedDexes: [DexType.UNISWAP_V3],
     publicRpcUrl: "https://arb1.arbitrum.io/rpc",
   },
+  [ChainId.AVALANCHE]: {
+    chainId: ChainId.AVALANCHE,
+    key: "avalanche",
+    name: "Avalanche",
+    wrappedNativeSymbol: "WAVAX",
+    explorerUrl: "https://snowtrace.io",
+    supportedDexes: [DexType.UNISWAP_V3],
+    publicRpcUrl: "https://api.avax.network/ext/bc/C/rpc",
+  },
+  // Superchains
   [ChainId.OPTIMISM]: {
     chainId: ChainId.OPTIMISM,
     key: "optimism",
@@ -55,14 +65,23 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     supportedDexes: [DexType.UNISWAP_V3],
     publicRpcUrl: "https://mainnet.base.org",
   },
-  [ChainId.AVALANCHE]: {
-    chainId: ChainId.AVALANCHE,
-    key: "avalanche",
-    name: "Avalanche",
-    wrappedNativeSymbol: "WAVAX",
-    explorerUrl: "https://snowtrace.io",
+  [ChainId.UNICHAIN]: {
+    chainId: ChainId.UNICHAIN,
+    key: "unichain",
+    name: "Unichain",
+    wrappedNativeSymbol: "WETH",
+    explorerUrl: "https://uniscan.xyz",
     supportedDexes: [DexType.UNISWAP_V3],
-    publicRpcUrl: "https://api.avax.network/ext/bc/C/rpc",
+    publicRpcUrl: "https://mainnet.unichain.org",
+  },
+  [ChainId.WORLD_CHAIN]: {
+    chainId: ChainId.WORLD_CHAIN,
+    key: "worldchain",
+    name: "World Chain",
+    wrappedNativeSymbol: "WETH",
+    explorerUrl: "https://worldscan.org",
+    supportedDexes: [DexType.UNISWAP_V3],
+    publicRpcUrl: "https://worldchain-mainnet.g.alchemy.com/public",
   },
 };
 
@@ -71,7 +90,10 @@ export const CHAIN_KEY_TO_ID: Record<ChainKey, ChainId> = {
   bsc: ChainId.BSC,
   polygon: ChainId.POLYGON,
   arbitrum: ChainId.ARBITRUM,
+  avalanche: ChainId.AVALANCHE,
+  // Superchains
   optimism: ChainId.OPTIMISM,
   base: ChainId.BASE,
-  avalanche: ChainId.AVALANCHE,
+  unichain: ChainId.UNICHAIN,
+  worldchain: ChainId.WORLD_CHAIN,
 };

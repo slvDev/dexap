@@ -11,9 +11,12 @@ export enum ChainId {
   BSC = 56,
   POLYGON = 137,
   ARBITRUM = 42161,
+  AVALANCHE = 43114,
+  // Superchains
   OPTIMISM = 10,
   BASE = 8453,
-  AVALANCHE = 43114,
+  UNICHAIN = 130,
+  WORLD_CHAIN = 480,
 }
 
 export type ChainKey =
@@ -21,9 +24,12 @@ export type ChainKey =
   | "bsc"
   | "polygon"
   | "arbitrum"
+  | "avalanche"
+  // Superchains
   | "optimism"
   | "base"
-  | "avalanche";
+  | "unichain"
+  | "worldchain";
 
 export interface Token {
   name: string;
@@ -81,4 +87,20 @@ export interface AggregatedPrice {
   tokenOut: Token;
   chainId: ChainId;
   timestamp: number;
+}
+
+// Superchain networks (OP Stack based)
+export const SUPERCHAIN_CHAINS = [
+  ChainId.OPTIMISM,
+  ChainId.BASE,
+  ChainId.UNICHAIN,
+  ChainId.WORLD_CHAIN,
+] as const;
+
+export function isSuperchain(chainId: ChainId): boolean {
+  return (SUPERCHAIN_CHAINS as readonly ChainId[]).includes(chainId);
+}
+
+export function getSuperchainChains(): ChainId[] {
+  return [...SUPERCHAIN_CHAINS];
 }
