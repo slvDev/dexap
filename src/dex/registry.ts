@@ -108,6 +108,23 @@ export const DEX_CONFIGS: Record<
       feeTiers: [100, 500, 3000, 10000],
     },
   },
+  [ChainId.AVALANCHE]: {
+    [DexType.UNISWAP_V3]: {
+      protocol: DEX_PROTOCOLS[DexType.UNISWAP_V3],
+      chainId: ChainId.AVALANCHE,
+      quoterAddress: "0xbe0F5544EC67e9B3b2D979aaA43f18Fd87E6257F",
+      factoryAddress: "0x740b1c1de25031C31FF4fC9A62f554A55cdC1baD",
+      feeTiers: [100, 500, 3000, 10000],
+    },
+    [DexType.SUSHISWAP_V3]: {
+      protocol: DEX_PROTOCOLS[DexType.SUSHISWAP_V3],
+      chainId: ChainId.AVALANCHE,
+      quoterAddress: "0xb1e835dc2785b52265711e17fccb0fd018226a6e",
+      factoryAddress: "0x3e603c14af37ebdad31709c4f848fc6ad5bec715",
+      feeTiers: [100, 500, 3000, 10000],
+    },
+  },
+  // Superchains
   [ChainId.OPTIMISM]: {
     [DexType.UNISWAP_V3]: {
       protocol: DEX_PROTOCOLS[DexType.UNISWAP_V3],
@@ -147,19 +164,21 @@ export const DEX_CONFIGS: Record<
       feeTiers: [100, 500, 3000, 10000],
     },
   },
-  [ChainId.AVALANCHE]: {
+  [ChainId.UNICHAIN]: {
     [DexType.UNISWAP_V3]: {
       protocol: DEX_PROTOCOLS[DexType.UNISWAP_V3],
-      chainId: ChainId.AVALANCHE,
-      quoterAddress: "0xbe0F5544EC67e9B3b2D979aaA43f18Fd87E6257F",
-      factoryAddress: "0x740b1c1de25031C31FF4fC9A62f554A55cdC1baD",
+      chainId: ChainId.UNICHAIN,
+      quoterAddress: "0x385a5cf5f83e99f7bb2852b6a19c3538b9fa7658",
+      factoryAddress: "0x1f98400000000000000000000000000000000003",
       feeTiers: [100, 500, 3000, 10000],
     },
-    [DexType.SUSHISWAP_V3]: {
-      protocol: DEX_PROTOCOLS[DexType.SUSHISWAP_V3],
-      chainId: ChainId.AVALANCHE,
-      quoterAddress: "0xb1e835dc2785b52265711e17fccb0fd018226a6e",
-      factoryAddress: "0x3e603c14af37ebdad31709c4f848fc6ad5bec715",
+  },
+  [ChainId.WORLD_CHAIN]: {
+    [DexType.UNISWAP_V3]: {
+      protocol: DEX_PROTOCOLS[DexType.UNISWAP_V3],
+      chainId: ChainId.WORLD_CHAIN,
+      quoterAddress: "0x10158D43e6cc414deE1Bd1eB0EfC6a5cBCfF244c",
+      factoryAddress: "0x7a5028BDa40e7B173C278C5342087826455ea25a",
       feeTiers: [100, 500, 3000, 10000],
     },
   },

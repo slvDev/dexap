@@ -1,32 +1,65 @@
-// TODO: fix when add more tokens
+import { createClient, getToken, ChainId, DexType } from "../index";
 
-// import { getPrice, WETH, USDC, USDT, DAI, WBTC, Token } from "../index";
+async function main() {
+  console.log("Testing multiple token pairs on Ethereum...\n");
 
-// const RPC_URL = "https://eth-mainnet.g.alchemy.com/v2/API_KEY";
+  const client = createClient({
+    infuraKey: "8c837931cddf4f98b45035ed75bbe706",
+  });
 
-// async function testPair(tokenIn: Token, tokenOut: Token) {
-//   try {
-//     const result = await getPrice(tokenIn, tokenOut, "1", RPC_URL);
-//     console.log(
-//       `${result.formatted} - ${(result.feeTier / 10000).toFixed(2)}% fee`
-//     );
-//   } catch (error) {
-//     console.log(
-//       `Error getting price for ${tokenIn.symbol}/${tokenOut.symbol}: ${error}`
-//     );
-//   }
-// }
+  // Define pairs to test
+  const pairs: [string, string][] = [
+    ["WETH", "USDC"],
+    ["WETH", "USDT"],
+    ["WETH", "DAI"],
+    ["WBTC", "USDC"],
+    ["USDC", "USDT"],
+    ["WSTETH", "WETH"],
+  ];
 
-// async function main() {
-//   console.log("Testing various token pairs:\n");
+  // Resolve tokens
+  const resolvedPairs = pairs.map(([inSym, outSym]) => ({
+    tokenIn: getToken(inSym, ChainId.ETHEREUM),
+    tokenOut: getToken(outSym, ChainId.ETHEREUM),
+    label: `${inSym}/${outSym}`,
+  }));
 
-//   await Promise.all([
-//     testPair(WETH, USDC),
-//     testPair(WETH, USDT),
-//     testPair(WETH, DAI),
-//     testPair(WBTC, USDC),
-//     testPair(USDC, USDT),
-//   ]);
-// }
+  // Check all tokens exist
+  for (const { tokenIn, tokenOut, label } of resolvedPairs) {
+    if (!tokenIn || !tokenOut) {
+      console.error(`Token not found for pair: ${label}`);
+      return;
+    }
+  }
 
-// main();
+  // Fetch all prices in parallel
+  const results = await Promise.allSettled(
+    resolvedPairs.map(async ({ tokenIn, tokenOut, label }) => {
+      const result = await client.getPrice(
+        tokenIn!,
+        tokenOut!,
+        "1",
+        DexType.UNISWAP_V3
+      );
+      return { label, result };
+    })
+  );
+
+  // Display results
+  console.log("Results:\n");
+  console.log("Pair".padEnd(15) + "Price".padEnd(20) + "Fee Tier");
+  console.log("-".repeat(45));
+
+  for (const entry of results) {
+    if (entry.status === "fulfilled") {
+      const { label, result } = entry.value;
+      const fee = `${(result.feeTier / 10000).toFixed(2)}%`;
+      const price = `$${result.price.toFixed(2)}`;
+      console.log(label.padEnd(15) + price.padEnd(20) + fee);
+    } else {
+      console.log(`Error: ${entry.reason}`);
+    }
+  }
+}
+
+main();
