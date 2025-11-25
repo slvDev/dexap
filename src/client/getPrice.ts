@@ -1,4 +1,4 @@
-import { formatUnits, parseUnits, PublicClient } from "viem";
+import { formatUnits, parseUnits, parseEther, PublicClient } from "viem";
 import { Token, PriceResult, FeeTierQuote, QuoterV2Response } from "../types";
 import { quoterAbi } from "../abis/quoter";
 import { FEE_TIERS, getQuoterAddress } from "../constants";
@@ -28,36 +28,74 @@ export async function getPrice(
 
   const amountInWei = parseUnits(amountIn, tokenIn.decimals);
   const quoterAddress = getQuoterAddress(tokenIn.chainId);
+  const SPOT_REFERENCE_AMOUNT = parseEther("0.001");
 
   const res = await client.multicall({
-    contracts: FEE_TIERS.map((feeTier) => ({
-      address: quoterAddress as `0x${string}`,
-      abi: quoterAbi,
-      functionName: "quoteExactInputSingle",
-      args: [
-        {
-          tokenIn: tokenIn.address,
-          tokenOut: tokenOut.address,
-          amountIn: amountInWei,
-          fee: feeTier,
-          sqrtPriceLimitX96: BigInt(0),
-        },
-      ],
-    })),
+    contracts: [
+      // Actual amount queries
+      ...FEE_TIERS.map((feeTier) => ({
+        address: quoterAddress as `0x${string}`,
+        abi: quoterAbi,
+        functionName: "quoteExactInputSingle",
+        args: [
+          {
+            tokenIn: tokenIn.address,
+            tokenOut: tokenOut.address,
+            amountIn: amountInWei,
+            fee: feeTier,
+            sqrtPriceLimitX96: 0n,
+          },
+        ],
+      })),
+      // Spot price queries for price impact calculation
+      ...FEE_TIERS.map((feeTier) => ({
+        address: quoterAddress as `0x${string}`,
+        abi: quoterAbi,
+        functionName: "quoteExactInputSingle",
+        args: [
+          {
+            tokenIn: tokenIn.address,
+            tokenOut: tokenOut.address,
+            amountIn: SPOT_REFERENCE_AMOUNT,
+            fee: feeTier,
+            sqrtPriceLimitX96: 0n,
+          },
+        ],
+      })),
+    ],
     allowFailure: true,
   });
 
-  const validQuotes: FeeTierQuote[] = res
+  const numFeeTiers = FEE_TIERS.length;
+  const actualResults = res.slice(0, numFeeTiers);
+  const spotResults = res.slice(numFeeTiers);
+
+  const validQuotes: FeeTierQuote[] = actualResults
     .map((call, index) => {
       if (call.status === "failure") {
         return null;
       }
 
       const feeTier = FEE_TIERS[index];
-      const [amountOut] = call.result as QuoterV2Response;
+      const [amountOut, , , gasEstimate] = call.result as QuoterV2Response;
       const price =
         Number(formatUnits(amountOut, tokenOut.decimals)) /
         Number(formatUnits(amountInWei, tokenIn.decimals));
+
+      // Calculate price impact from spot price
+      let priceImpact = 0;
+      const spotCall = spotResults[index];
+      if (spotCall.status === "success") {
+        const [spotAmountOut] = spotCall.result as QuoterV2Response;
+        const spotPrice = Number(spotAmountOut) / Number(SPOT_REFERENCE_AMOUNT);
+        const actualPrice = Number(amountOut) / Number(amountInWei);
+        if (spotPrice > 0) {
+          priceImpact = Math.max(
+            0,
+            ((spotPrice - actualPrice) / spotPrice) * 100
+          );
+        }
+      }
 
       return {
         feeTier,
@@ -66,6 +104,8 @@ export async function getPrice(
         formatted: `1 ${tokenIn.symbol} = ${price.toFixed(2)} ${
           tokenOut.symbol
         } (${feeTier / 10000}% fee)`,
+        gasEstimate,
+        priceImpact,
       };
     })
     .filter((q) => q !== null);
@@ -93,5 +133,7 @@ export async function getPrice(
     formatted: best.formatted,
     feeTier: best.feeTier,
     chainId: tokenIn.chainId,
+    gasEstimate: best.gasEstimate.toString(),
+    priceImpact: best.priceImpact,
   };
 }
