@@ -40,6 +40,8 @@ export interface PriceResult {
   formatted: string;
   feeTier: number;
   chainId: ChainId;
+  gasEstimate: string;
+  priceImpact: number;
 }
 
 export interface FeeTierQuote {
@@ -47,6 +49,8 @@ export interface FeeTierQuote {
   amountOut: bigint;
   price: number;
   formatted: string;
+  gasEstimate: bigint;
+  priceImpact: number;
 }
 
 export type QuoterV2Response = readonly [

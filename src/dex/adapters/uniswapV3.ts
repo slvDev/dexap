@@ -1,4 +1,4 @@
-import { PublicClient, formatUnits } from "viem";
+import { PublicClient, formatUnits, parseEther } from "viem";
 import {
   Token,
   PriceResult,
@@ -10,6 +10,7 @@ import { BaseDexAdapter } from "../base";
 
 export class UniswapV3Adapter extends BaseDexAdapter {
   readonly quoterAbi = quoterAbi;
+  private readonly SPOT_REFERENCE_AMOUNT = parseEther("0.001");
 
   async getQuote(
     client: PublicClient,
@@ -19,36 +20,78 @@ export class UniswapV3Adapter extends BaseDexAdapter {
   ): Promise<PriceResult> {
     this.validateTokens(tokenIn, tokenOut);
 
-    // Query all fee tiers using multicall
+    const feeTiers = this.config.feeTiers;
+
+    // Query all fee tiers using multicall + spot price queries for price impact
     const res = await client.multicall({
-      contracts: this.config.feeTiers.map((feeTier) => ({
-        address: this.config.quoterAddress,
-        abi: this.quoterAbi,
-        functionName: "quoteExactInputSingle",
-        args: [
-          {
-            tokenIn: tokenIn.address,
-            tokenOut: tokenOut.address,
-            amountIn,
-            fee: feeTier,
-            sqrtPriceLimitX96: 0n,
-          },
-        ],
-      })),
+      contracts: [
+        // Actual amount queries
+        ...feeTiers.map((feeTier) => ({
+          address: this.config.quoterAddress,
+          abi: this.quoterAbi,
+          functionName: "quoteExactInputSingle",
+          args: [
+            {
+              tokenIn: tokenIn.address,
+              tokenOut: tokenOut.address,
+              amountIn,
+              fee: feeTier,
+              sqrtPriceLimitX96: 0n,
+            },
+          ],
+        })),
+        // Spot price queries (small amount) for price impact calculation
+        ...feeTiers.map((feeTier) => ({
+          address: this.config.quoterAddress,
+          abi: this.quoterAbi,
+          functionName: "quoteExactInputSingle",
+          args: [
+            {
+              tokenIn: tokenIn.address,
+              tokenOut: tokenOut.address,
+              amountIn: this.SPOT_REFERENCE_AMOUNT,
+              fee: feeTier,
+              sqrtPriceLimitX96: 0n,
+            },
+          ],
+        })),
+      ],
       allowFailure: true,
     });
 
-    const validQuotes: FeeTierQuote[] = res
+    const numFeeTiers = feeTiers.length;
+    const actualResults = res.slice(0, numFeeTiers);
+    const spotResults = res.slice(numFeeTiers);
+
+    const validQuotes: FeeTierQuote[] = actualResults
       .map((call, index) => {
         if (call.status === "failure") {
           return null;
         }
 
-        const feeTier = this.config.feeTiers[index];
-        const [amountOut] = call.result as QuoterV2Response;
+        const feeTier = feeTiers[index];
+        const [amountOut, , , gasEstimate] = call.result as QuoterV2Response;
         const price =
           Number(formatUnits(amountOut, tokenOut.decimals)) /
           Number(formatUnits(amountIn, tokenIn.decimals));
+
+        // Calculate price impact from spot price
+        let priceImpact = 0;
+        const spotCall = spotResults[index];
+        if (spotCall.status === "success") {
+          const [spotAmountOut] = spotCall.result as QuoterV2Response;
+          // Spot price = output per unit input at reference amount
+          const spotPrice =
+            Number(spotAmountOut) / Number(this.SPOT_REFERENCE_AMOUNT);
+          // Actual price = output per unit input at actual amount
+          const actualPrice = Number(amountOut) / Number(amountIn);
+          if (spotPrice > 0) {
+            priceImpact = Math.max(
+              0,
+              ((spotPrice - actualPrice) / spotPrice) * 100
+            );
+          }
+        }
 
         return {
           feeTier,
@@ -57,6 +100,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
           formatted: `1 ${tokenIn.symbol} = ${price.toFixed(2)} ${
             tokenOut.symbol
           } (${feeTier / 10000}% fee)`,
+          gasEstimate,
+          priceImpact,
         };
       })
       .filter((q) => q !== null);
@@ -84,6 +129,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
       formatted: best.formatted,
       feeTier: best.feeTier,
       chainId: this.config.chainId,
+      gasEstimate: best.gasEstimate.toString(),
+      priceImpact: best.priceImpact,
     };
   }
 
@@ -96,36 +143,72 @@ export class UniswapV3Adapter extends BaseDexAdapter {
   ): Promise<PriceResult | null> {
     this.validateTokens(tokenIn, tokenOut);
 
-    let result: QuoterV2Response;
+    const res = await client.multicall({
+      contracts: [
+        // Actual amount query
+        {
+          address: this.config.quoterAddress,
+          abi: this.quoterAbi,
+          functionName: "quoteExactInputSingle",
+          args: [
+            {
+              tokenIn: tokenIn.address,
+              tokenOut: tokenOut.address,
+              amountIn,
+              fee: feeTier,
+              sqrtPriceLimitX96: 0n,
+            },
+          ],
+        },
+        // Spot price query (small amount)
+        {
+          address: this.config.quoterAddress,
+          abi: this.quoterAbi,
+          functionName: "quoteExactInputSingle",
+          args: [
+            {
+              tokenIn: tokenIn.address,
+              tokenOut: tokenOut.address,
+              amountIn: this.SPOT_REFERENCE_AMOUNT,
+              fee: feeTier,
+              sqrtPriceLimitX96: 0n,
+            },
+          ],
+        },
+      ],
+      allowFailure: true,
+    });
 
-    try {
-      result = (await client.readContract({
-        address: this.config.quoterAddress,
-        abi: this.quoterAbi,
-        functionName: "quoteExactInputSingle",
-        args: [
-          {
-            tokenIn: tokenIn.address,
-            tokenOut: tokenOut.address,
-            amountIn,
-            fee: feeTier,
-            sqrtPriceLimitX96: 0n,
-          },
-        ],
-      })) as QuoterV2Response;
-    } catch (error) {
+    const [actualCall, spotCall] = res;
+
+    if (actualCall.status === "failure") {
       return null;
     }
 
-    const [amountOut] = result;
+    const [amountOut, , , gasEstimate] = actualCall.result as QuoterV2Response;
 
-    if (amountOut === BigInt(0)) {
+    if (amountOut === 0n) {
       return null;
     }
 
     const price =
       Number(formatUnits(amountOut, tokenOut.decimals)) /
       Number(formatUnits(amountIn, tokenIn.decimals));
+
+    // Calculate price impact
+    let priceImpact = 0;
+    if (spotCall.status === "success") {
+      const [spotAmountOut] = spotCall.result as QuoterV2Response;
+      const spotPrice =
+        Number(spotAmountOut) / Number(this.SPOT_REFERENCE_AMOUNT);
+      const actualPrice = Number(amountOut) / Number(amountIn);
+      if (spotPrice > 0) {
+        priceImpact = Math.max(
+          0,
+          ((spotPrice - actualPrice) / spotPrice) * 100
+        );
+      }
+    }
 
     return {
       amountIn: amountIn.toString(),
@@ -136,6 +219,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
       } (${feeTier / 10000}% fee)`,
       feeTier,
       chainId: this.config.chainId,
+      gasEstimate: gasEstimate.toString(),
+      priceImpact,
     };
   }
 }

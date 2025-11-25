@@ -35,7 +35,7 @@ async function main() {
       console.log(
         `   ${quote.dexType.padEnd(18)} $${quote.price.toFixed(
           2
-        )} (${spread.toFixed(2)}% from min)`
+        )} (spread: ${spread.toFixed(2)}%, impact: ${quote.priceImpact.toFixed(4)}%)`
       );
     });
     console.log("");
