@@ -15,8 +15,10 @@ export enum ChainId {
   // Superchains
   OPTIMISM = 10,
   BASE = 8453,
+  ZORA = 7777777,
   UNICHAIN = 130,
   WORLD_CHAIN = 480,
+  SONEIUM = 1868,
 }
 
 export type ChainKey =
@@ -28,8 +30,10 @@ export type ChainKey =
   // Superchains
   | "optimism"
   | "base"
+  | "zora"
   | "unichain"
-  | "worldchain";
+  | "worldchain"
+  | "soneium";
 
 export interface Token {
   name: string;
@@ -93,8 +97,10 @@ export interface AggregatedPrice {
 export const SUPERCHAIN_CHAINS = [
   ChainId.OPTIMISM,
   ChainId.BASE,
+  ChainId.ZORA,
   ChainId.UNICHAIN,
   ChainId.WORLD_CHAIN,
+  ChainId.SONEIUM,
 ] as const;
 
 export function isSuperchain(chainId: ChainId): boolean {

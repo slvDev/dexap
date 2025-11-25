@@ -65,6 +65,15 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     supportedDexes: [DexType.UNISWAP_V3],
     publicRpcUrl: "https://mainnet.base.org",
   },
+  [ChainId.ZORA]: {
+    chainId: ChainId.ZORA,
+    key: "zora",
+    name: "Zora",
+    wrappedNativeSymbol: "WETH",
+    explorerUrl: "https://explorer.zora.energy",
+    supportedDexes: [DexType.UNISWAP_V3],
+    publicRpcUrl: "https://rpc.zora.energy",
+  },
   [ChainId.UNICHAIN]: {
     chainId: ChainId.UNICHAIN,
     key: "unichain",
@@ -83,6 +92,15 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     supportedDexes: [DexType.UNISWAP_V3],
     publicRpcUrl: "https://worldchain-mainnet.g.alchemy.com/public",
   },
+  [ChainId.SONEIUM]: {
+    chainId: ChainId.SONEIUM,
+    key: "soneium",
+    name: "Soneium",
+    wrappedNativeSymbol: "WETH",
+    explorerUrl: "https://soneium.blockscout.com",
+    supportedDexes: [DexType.UNISWAP_V3],
+    publicRpcUrl: "https://rpc.soneium.org",
+  },
 };
 
 export const CHAIN_KEY_TO_ID: Record<ChainKey, ChainId> = {
@@ -94,6 +112,8 @@ export const CHAIN_KEY_TO_ID: Record<ChainKey, ChainId> = {
   // Superchains
   optimism: ChainId.OPTIMISM,
   base: ChainId.BASE,
+  zora: ChainId.ZORA,
   unichain: ChainId.UNICHAIN,
   worldchain: ChainId.WORLD_CHAIN,
+  soneium: ChainId.SONEIUM,
 };

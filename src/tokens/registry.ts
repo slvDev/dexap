@@ -409,6 +409,16 @@ export const TOKENS: TokenRegistry = {
     },
   },
 
+  [ChainId.ZORA]: {
+    WETH: {
+      name: "Zora Bridged WETH  Zora Network ",
+      symbol: "WETH",
+      decimals: 18,
+      address: "0x4200000000000000000000000000000000000006",
+      chainId: ChainId.ZORA,
+    },
+  },
+
   [ChainId.UNICHAIN]: {
     WETH: {
       name: "Unichain Bridged WETH (Unichain)",
@@ -468,6 +478,30 @@ export const TOKENS: TokenRegistry = {
       decimals: 8,
       address: "0x03c7054bcb39f7b2e5b2c7acb37583e32d70cfa3",
       chainId: ChainId.WORLD_CHAIN,
+    },
+  },
+
+  [ChainId.SONEIUM]: {
+    WETH: {
+      name: "Superbridge Bridged WETH (Soneium)",
+      symbol: "WETH",
+      decimals: 18,
+      address: "0x4200000000000000000000000000000000000006",
+      chainId: ChainId.SONEIUM,
+    },
+    USDT: {
+      name: "Soneium Bridged USDT (Soneium)",
+      symbol: "USDT",
+      decimals: 6,
+      address: "0x3a337a6ada9d885b6ad95ec48f9b75f197b5ae35",
+      chainId: ChainId.SONEIUM,
+    },
+    WBTC: {
+      name: "Wrapped Bitcoin",
+      symbol: "WBTC",
+      decimals: 8,
+      address: "0x0555e30da8f98308edb960aa94c0db47230d2b9c",
+      chainId: ChainId.SONEIUM,
     },
   },
 

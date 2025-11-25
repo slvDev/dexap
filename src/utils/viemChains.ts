@@ -7,8 +7,10 @@ import {
   // Superchains
   optimism,
   base,
+  zora,
   unichain,
   worldchain,
+  soneium,
 } from "viem/chains";
 import type { Chain } from "viem";
 import { ChainId } from "../types";
@@ -22,8 +24,10 @@ export const VIEM_CHAINS: Record<ChainId, Chain> = {
   // Superchains
   [ChainId.OPTIMISM]: optimism,
   [ChainId.BASE]: base,
+  [ChainId.ZORA]: zora,
   [ChainId.UNICHAIN]: unichain,
   [ChainId.WORLD_CHAIN]: worldchain,
+  [ChainId.SONEIUM]: soneium,
 };
 
 export function getViemChain(chainId: ChainId): Chain {

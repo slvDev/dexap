@@ -11,8 +11,10 @@ export const QUOTER_ADDRESSES: Record<ChainId, string> = {
   // Superchains
   [ChainId.OPTIMISM]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
   [ChainId.BASE]: "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a",
+  [ChainId.ZORA]: "0x11867e1b3348F3ce4FcC170BC5af3d23E07E64Df",
   [ChainId.UNICHAIN]: "0x385a5cf5f83e99f7bb2852b6a19c3538b9fa7658",
   [ChainId.WORLD_CHAIN]: "0x10158D43e6cc414deE1Bd1eB0EfC6a5cBCfF244c",
+  [ChainId.SONEIUM]: "0x3e6c707d0125226ff60f291b6bd1404634f00aba",
 };
 
 export function getQuoterAddress(chainId: ChainId): string {

@@ -164,6 +164,15 @@ export const DEX_CONFIGS: Record<
       feeTiers: [100, 500, 3000, 10000],
     },
   },
+  [ChainId.ZORA]: {
+    [DexType.UNISWAP_V3]: {
+      protocol: DEX_PROTOCOLS[DexType.UNISWAP_V3],
+      chainId: ChainId.ZORA,
+      quoterAddress: "0x11867e1b3348F3ce4FcC170BC5af3d23E07E64Df",
+      factoryAddress: "0x7145F8aeef1f6510E92164038E1B6F8cB2c42Cbb",
+      feeTiers: [100, 500, 3000, 10000],
+    },
+  },
   [ChainId.UNICHAIN]: {
     [DexType.UNISWAP_V3]: {
       protocol: DEX_PROTOCOLS[DexType.UNISWAP_V3],
@@ -179,6 +188,15 @@ export const DEX_CONFIGS: Record<
       chainId: ChainId.WORLD_CHAIN,
       quoterAddress: "0x10158D43e6cc414deE1Bd1eB0EfC6a5cBCfF244c",
       factoryAddress: "0x7a5028BDa40e7B173C278C5342087826455ea25a",
+      feeTiers: [100, 500, 3000, 10000],
+    },
+  },
+  [ChainId.SONEIUM]: {
+    [DexType.UNISWAP_V3]: {
+      protocol: DEX_PROTOCOLS[DexType.UNISWAP_V3],
+      chainId: ChainId.SONEIUM,
+      quoterAddress: "0x3e6c707d0125226ff60f291b6bd1404634f00aba",
+      factoryAddress: "0x42ae7ec7ff020412639d443e245d936429fbe717",
       feeTiers: [100, 500, 3000, 10000],
     },
   },
