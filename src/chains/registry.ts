@@ -7,7 +7,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     name: "Ethereum",
     wrappedNativeSymbol: "WETH",
     explorerUrl: "https://etherscan.io",
-    supportedDexes: [DexType.UNISWAP_V3],
+    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3, DexType.PANCAKESWAP_V3],
     publicRpcUrl: "https://eth.merkle.io",
   },
   [ChainId.BSC]: {
@@ -16,7 +16,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     name: "BNB Smart Chain",
     wrappedNativeSymbol: "WBNB",
     explorerUrl: "https://bscscan.com",
-    supportedDexes: [DexType.UNISWAP_V3],
+    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3, DexType.PANCAKESWAP_V3],
     publicRpcUrl: "https://bsc-dataseed.binance.org",
   },
   [ChainId.POLYGON]: {
@@ -25,7 +25,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     name: "Polygon",
     wrappedNativeSymbol: "WPOL",
     explorerUrl: "https://polygonscan.com",
-    supportedDexes: [DexType.UNISWAP_V3],
+    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3],
     publicRpcUrl: "https://polygon-rpc.com",
   },
   [ChainId.ARBITRUM]: {
@@ -34,7 +34,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     name: "Arbitrum",
     wrappedNativeSymbol: "WETH",
     explorerUrl: "https://arbiscan.io",
-    supportedDexes: [DexType.UNISWAP_V3],
+    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3, DexType.PANCAKESWAP_V3],
     publicRpcUrl: "https://arb1.arbitrum.io/rpc",
   },
   [ChainId.AVALANCHE]: {
@@ -43,7 +43,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     name: "Avalanche",
     wrappedNativeSymbol: "WAVAX",
     explorerUrl: "https://snowtrace.io",
-    supportedDexes: [DexType.UNISWAP_V3],
+    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3],
     publicRpcUrl: "https://api.avax.network/ext/bc/C/rpc",
   },
   // Superchains
@@ -53,7 +53,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     name: "Optimism",
     wrappedNativeSymbol: "WETH",
     explorerUrl: "https://optimistic.etherscan.io",
-    supportedDexes: [DexType.UNISWAP_V3],
+    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3],
     publicRpcUrl: "https://mainnet.optimism.io",
   },
   [ChainId.BASE]: {
@@ -62,7 +62,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     name: "Base",
     wrappedNativeSymbol: "WETH",
     explorerUrl: "https://basescan.org",
-    supportedDexes: [DexType.UNISWAP_V3],
+    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3, DexType.PANCAKESWAP_V3],
     publicRpcUrl: "https://mainnet.base.org",
   },
   [ChainId.ZORA]: {
