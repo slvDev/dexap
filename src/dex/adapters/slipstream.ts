@@ -1,17 +1,17 @@
 import { PublicClient, formatUnits, parseEther } from "viem";
 import { Token, PriceResult, PoolQuote, QuoterV2Response } from "../../types";
-import { uniQuoterAbi } from "../../abis/quoter";
+import { slipQuoterAbi } from "../../abis/quoter";
 import { BaseDexAdapter } from "../base";
 
-export class UniswapV3Adapter extends BaseDexAdapter {
-  readonly quoterAbi = uniQuoterAbi;
+export class SlipstreamAdapter extends BaseDexAdapter {
+  readonly quoterAbi = slipQuoterAbi;
   private readonly SPOT_REFERENCE_AMOUNT = parseEther("0.001");
 
   private buildQuoteContract(
     tokenIn: Token,
     tokenOut: Token,
     amountIn: bigint,
-    fee: number
+    tickSpacing: number
   ) {
     return {
       address: this.config.quoterAddress,
@@ -22,7 +22,7 @@ export class UniswapV3Adapter extends BaseDexAdapter {
           tokenIn: tokenIn.address,
           tokenOut: tokenOut.address,
           amountIn,
-          fee,
+          tickSpacing,
           sqrtPriceLimitX96: 0n,
         },
       ] as const,
@@ -53,29 +53,29 @@ export class UniswapV3Adapter extends BaseDexAdapter {
   ): Promise<PriceResult> {
     this.validateTokens(tokenIn, tokenOut);
 
-    const fees = this.config.tiers;
+    const tickSpacings = this.config.tiers;
 
-    // Query all fee tiers using multicall + spot price queries for price impact
+    // Query all tick spacings using multicall + spot price queries for price impact
     const res = await client.multicall({
       contracts: [
-        ...fees.map((fee) =>
-          this.buildQuoteContract(tokenIn, tokenOut, amountIn, fee)
+        ...tickSpacings.map((tickSpacing) =>
+          this.buildQuoteContract(tokenIn, tokenOut, amountIn, tickSpacing)
         ),
-        ...fees.map((fee) =>
+        ...tickSpacings.map((tickSpacing) =>
           this.buildQuoteContract(
             tokenIn,
             tokenOut,
             this.SPOT_REFERENCE_AMOUNT,
-            fee
+            tickSpacing
           )
         ),
       ],
       allowFailure: true,
     });
 
-    const numFees = fees.length;
-    const actualResults = res.slice(0, numFees);
-    const spotResults = res.slice(numFees);
+    const numTickSpacings = tickSpacings.length;
+    const actualResults = res.slice(0, numTickSpacings);
+    const spotResults = res.slice(numTickSpacings);
 
     const validQuotes: PoolQuote[] = actualResults
       .map((call, index) => {
@@ -83,8 +83,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
           return null;
         }
 
-        const fee = fees[index];
-        const poolTier = this.createPoolTier(fee);
+        const tickSpacing = tickSpacings[index];
+        const poolTier = this.createPoolTier(tickSpacing);
         const [amountOut, , , gasEstimate] = call.result as QuoterV2Response;
         const price =
           Number(formatUnits(amountOut, tokenOut.decimals)) /
@@ -140,18 +140,18 @@ export class UniswapV3Adapter extends BaseDexAdapter {
     tokenIn: Token,
     tokenOut: Token,
     amountIn: bigint,
-    fee: number
+    tickSpacing: number
   ): Promise<PriceResult | null> {
     this.validateTokens(tokenIn, tokenOut);
 
     const res = await client.multicall({
       contracts: [
-        this.buildQuoteContract(tokenIn, tokenOut, amountIn, fee),
+        this.buildQuoteContract(tokenIn, tokenOut, amountIn, tickSpacing),
         this.buildQuoteContract(
           tokenIn,
           tokenOut,
           this.SPOT_REFERENCE_AMOUNT,
-          fee
+          tickSpacing
         ),
       ],
       allowFailure: true,
@@ -178,7 +178,7 @@ export class UniswapV3Adapter extends BaseDexAdapter {
       amountOut,
       amountIn
     );
-    const poolTier = this.createPoolTier(fee);
+    const poolTier = this.createPoolTier(tickSpacing);
 
     return {
       amountIn: amountIn.toString(),

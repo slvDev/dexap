@@ -11,7 +11,9 @@ import {
 async function main() {
   console.log("Token Manager Example\n");
 
-  const client = createClient();
+  const client = createClient({
+    alchemyKey: "API_KEY",
+  });
 
   // Example 1: Get tokens using helper functions
   console.log("Getting WETH and USDC on Ethereum...");
@@ -49,7 +51,6 @@ async function main() {
   try {
     const price = await client.getPrice(weth, usdc, "1", DexType.UNISWAP_V3);
     console.log(`Price: ${price.formatted}`);
-    console.log(`Fee Tier: ${(price.feeTier / 10000).toFixed(2)}%`);
   } catch (error) {
     console.error("Error fetching price:", error);
   }

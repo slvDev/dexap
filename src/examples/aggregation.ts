@@ -1,16 +1,16 @@
 import { ChainId, getToken, createClient } from "..";
 
 async function main() {
-  console.log("📊 Price Aggregation Example\n");
+  console.log("Price Aggregation Example\n");
 
   // Create client (uses public RPCs by default)
   const client = createClient({
-    infuraKey: "API_KEY",
+    alchemyKey: "API_KEY",
   });
 
-  // Get tokens
-  const weth = getToken("WETH", ChainId.ETHEREUM);
-  const usdc = getToken("USDC", ChainId.ETHEREUM);
+  // Get tokens - testing on Base with multiple DEXes
+  const weth = getToken("WETH", ChainId.BASE);
+  const usdc = getToken("USDC", ChainId.BASE);
 
   if (!weth || !usdc) {
     throw new Error("Tokens not found");
@@ -35,7 +35,9 @@ async function main() {
       console.log(
         `   ${quote.dexType.padEnd(18)} $${quote.price.toFixed(
           2
-        )} (spread: ${spread.toFixed(2)}%, impact: ${quote.priceImpact.toFixed(4)}%)`
+        )} (spread: ${spread.toFixed(2)}%, impact: ${quote.priceImpact.toFixed(
+          4
+        )}%)`
       );
     });
     console.log("");

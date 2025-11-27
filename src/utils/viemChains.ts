@@ -3,9 +3,14 @@ import {
   bsc,
   polygon,
   arbitrum,
+  avalanche,
+  // Superchains
   optimism,
   base,
-  avalanche,
+  zora,
+  unichain,
+  worldchain,
+  soneium,
 } from "viem/chains";
 import type { Chain } from "viem";
 import { ChainId } from "../types";
@@ -15,9 +20,14 @@ export const VIEM_CHAINS: Record<ChainId, Chain> = {
   [ChainId.BSC]: bsc,
   [ChainId.POLYGON]: polygon,
   [ChainId.ARBITRUM]: arbitrum,
+  [ChainId.AVALANCHE]: avalanche,
+  // Superchains
   [ChainId.OPTIMISM]: optimism,
   [ChainId.BASE]: base,
-  [ChainId.AVALANCHE]: avalanche,
+  [ChainId.ZORA]: zora,
+  [ChainId.UNICHAIN]: unichain,
+  [ChainId.WORLD_CHAIN]: worldchain,
+  [ChainId.SONEIUM]: soneium,
 };
 
 export function getViemChain(chainId: ChainId): Chain {

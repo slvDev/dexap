@@ -4,7 +4,7 @@ async function main() {
   console.log("Multi-DEX Price Comparison Example\n");
 
   const client = createClient({
-    infuraKey: "API_KEY",
+    alchemyKey: "API_KEY",
   });
 
   const weth = getToken("WETH", ChainId.ETHEREUM)!;
@@ -28,7 +28,7 @@ async function main() {
   const bestPrice = await client.getBestPrice(weth, usdc, "1");
   console.log(`  Best: ${bestPrice.formatted}`);
   console.log(`  DEX: ${bestPrice.dexType}`);
-  console.log(`  Fee Tier: ${(bestPrice.feeTier / 10000).toFixed(2)}%`);
+  console.log(`  Pool Tier: ${bestPrice.poolTier.display}`);
   console.log(`  Gas Estimate: ${bestPrice.gasEstimate}`);
   console.log(`  Price Impact: ${bestPrice.priceImpact.toFixed(4)}%`);
 }
