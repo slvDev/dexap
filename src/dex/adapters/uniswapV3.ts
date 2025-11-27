@@ -1,22 +1,17 @@
 import { PublicClient, formatUnits, parseEther } from "viem";
-import {
-  Token,
-  PriceResult,
-  FeeTierQuote,
-  QuoterV2Response,
-} from "../../types";
-import { quoterAbi } from "../../abis/quoter";
+import { Token, PriceResult, PoolQuote, QuoterV2Response } from "../../types";
+import { uniQuoterAbi } from "../../abis/quoter";
 import { BaseDexAdapter } from "../base";
 
 export class UniswapV3Adapter extends BaseDexAdapter {
-  readonly quoterAbi = quoterAbi;
+  readonly quoterAbi = uniQuoterAbi;
   private readonly SPOT_REFERENCE_AMOUNT = parseEther("0.001");
 
   private buildQuoteContract(
     tokenIn: Token,
     tokenOut: Token,
     amountIn: bigint,
-    feeTier: number
+    fee: number
   ) {
     return {
       address: this.config.quoterAddress,
@@ -27,7 +22,7 @@ export class UniswapV3Adapter extends BaseDexAdapter {
           tokenIn: tokenIn.address,
           tokenOut: tokenOut.address,
           amountIn,
-          fee: feeTier,
+          fee,
           sqrtPriceLimitX96: 0n,
         },
       ] as const,
@@ -42,7 +37,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
     if (spotCall.status !== "success") return 0;
 
     const [spotAmountOut] = spotCall.result as QuoterV2Response;
-    const spotPrice = Number(spotAmountOut) / Number(this.SPOT_REFERENCE_AMOUNT);
+    const spotPrice =
+      Number(spotAmountOut) / Number(this.SPOT_REFERENCE_AMOUNT);
     const actualPrice = Number(amountOut) / Number(amountIn);
 
     if (spotPrice <= 0) return 0;
@@ -57,32 +53,38 @@ export class UniswapV3Adapter extends BaseDexAdapter {
   ): Promise<PriceResult> {
     this.validateTokens(tokenIn, tokenOut);
 
-    const feeTiers = this.config.feeTiers;
+    const fees = this.config.tiers;
 
     // Query all fee tiers using multicall + spot price queries for price impact
     const res = await client.multicall({
       contracts: [
-        ...feeTiers.map((feeTier) =>
-          this.buildQuoteContract(tokenIn, tokenOut, amountIn, feeTier)
+        ...fees.map((fee) =>
+          this.buildQuoteContract(tokenIn, tokenOut, amountIn, fee)
         ),
-        ...feeTiers.map((feeTier) =>
-          this.buildQuoteContract(tokenIn, tokenOut, this.SPOT_REFERENCE_AMOUNT, feeTier)
+        ...fees.map((fee) =>
+          this.buildQuoteContract(
+            tokenIn,
+            tokenOut,
+            this.SPOT_REFERENCE_AMOUNT,
+            fee
+          )
         ),
       ],
       allowFailure: true,
     });
 
-    const numFeeTiers = feeTiers.length;
-    const actualResults = res.slice(0, numFeeTiers);
-    const spotResults = res.slice(numFeeTiers);
+    const numFees = fees.length;
+    const actualResults = res.slice(0, numFees);
+    const spotResults = res.slice(numFees);
 
-    const validQuotes: FeeTierQuote[] = actualResults
+    const validQuotes: PoolQuote[] = actualResults
       .map((call, index) => {
         if (call.status === "failure") {
           return null;
         }
 
-        const feeTier = feeTiers[index];
+        const fee = fees[index];
+        const poolTier = this.createPoolTier(fee);
         const [amountOut, , , gasEstimate] = call.result as QuoterV2Response;
         const price =
           Number(formatUnits(amountOut, tokenOut.decimals)) /
@@ -95,12 +97,12 @@ export class UniswapV3Adapter extends BaseDexAdapter {
         );
 
         return {
-          feeTier,
+          poolTier,
           amountOut,
           price,
           formatted: `1 ${tokenIn.symbol} = ${price.toFixed(2)} ${
             tokenOut.symbol
-          } (${feeTier / 10000}% fee)`,
+          } (${poolTier.display})`,
           gasEstimate,
           priceImpact,
         };
@@ -118,9 +120,7 @@ export class UniswapV3Adapter extends BaseDexAdapter {
     );
 
     console.log(
-      `[${this.config.protocol.name}] Found ${validQuotes.length} pools for ${
-        tokenIn.symbol
-      }/${tokenOut.symbol}, best: ${best.feeTier / 10000}% fee`
+      `[${this.config.protocol.name}] Found ${validQuotes.length} pools for ${tokenIn.symbol}/${tokenOut.symbol}, best: ${best.poolTier.display}`
     );
 
     return {
@@ -128,26 +128,31 @@ export class UniswapV3Adapter extends BaseDexAdapter {
       amountOut: best.amountOut.toString(),
       price: best.price,
       formatted: best.formatted,
-      feeTier: best.feeTier,
+      poolTier: best.poolTier,
       chainId: this.config.chainId,
       gasEstimate: best.gasEstimate.toString(),
       priceImpact: best.priceImpact,
     };
   }
 
-  async getQuoteForFeeTier(
+  async getQuoteForPoolParam(
     client: PublicClient,
     tokenIn: Token,
     tokenOut: Token,
     amountIn: bigint,
-    feeTier: number
+    fee: number
   ): Promise<PriceResult | null> {
     this.validateTokens(tokenIn, tokenOut);
 
     const res = await client.multicall({
       contracts: [
-        this.buildQuoteContract(tokenIn, tokenOut, amountIn, feeTier),
-        this.buildQuoteContract(tokenIn, tokenOut, this.SPOT_REFERENCE_AMOUNT, feeTier),
+        this.buildQuoteContract(tokenIn, tokenOut, amountIn, fee),
+        this.buildQuoteContract(
+          tokenIn,
+          tokenOut,
+          this.SPOT_REFERENCE_AMOUNT,
+          fee
+        ),
       ],
       allowFailure: true,
     });
@@ -168,7 +173,12 @@ export class UniswapV3Adapter extends BaseDexAdapter {
       Number(formatUnits(amountOut, tokenOut.decimals)) /
       Number(formatUnits(amountIn, tokenIn.decimals));
 
-    const priceImpact = this.calculatePriceImpact(spotCall, amountOut, amountIn);
+    const priceImpact = this.calculatePriceImpact(
+      spotCall,
+      amountOut,
+      amountIn
+    );
+    const poolTier = this.createPoolTier(fee);
 
     return {
       amountIn: amountIn.toString(),
@@ -176,8 +186,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
       price,
       formatted: `1 ${tokenIn.symbol} = ${price.toFixed(2)} ${
         tokenOut.symbol
-      } (${feeTier / 10000}% fee)`,
-      feeTier,
+      } (${poolTier.display})`,
+      poolTier,
       chainId: this.config.chainId,
       gasEstimate: gasEstimate.toString(),
       priceImpact,
