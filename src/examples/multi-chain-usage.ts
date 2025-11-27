@@ -14,7 +14,9 @@ async function main() {
   });
 
   // Create client with default public RPCs
-  const client = createClient();
+  const client = createClient({
+    alchemyKey: "API_KEY",
+  });
 
   // Or configure with your own RPC URLs using chain keys:
   // const client = createClient({

@@ -4,7 +4,7 @@ async function main() {
   console.log("Testing multiple token pairs on Ethereum...\n");
 
   const client = createClient({
-    infuraKey: "8c837931cddf4f98b45035ed75bbe706",
+    alchemyKey: "API_KEY",
   });
 
   // Define pairs to test
@@ -47,15 +47,16 @@ async function main() {
 
   // Display results
   console.log("Results:\n");
-  console.log("Pair".padEnd(15) + "Price".padEnd(20) + "Fee Tier");
-  console.log("-".repeat(45));
+  console.log("Pair".padEnd(15) + "Price".padEnd(20) + "Pool Tier");
+  console.log("-".repeat(50));
 
   for (const entry of results) {
     if (entry.status === "fulfilled") {
       const { label, result } = entry.value;
-      const fee = `${(result.feeTier / 10000).toFixed(2)}%`;
       const price = `$${result.price.toFixed(2)}`;
-      console.log(label.padEnd(15) + price.padEnd(20) + fee);
+      console.log(
+        label.padEnd(15) + price.padEnd(20) + result.poolTier.display
+      );
     } else {
       console.log(`Error: ${entry.reason}`);
     }
