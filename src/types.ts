@@ -4,6 +4,8 @@ export enum DexType {
   UNISWAP_V3 = "uniswap-v3",
   SUSHISWAP_V3 = "sushiswap-v3",
   PANCAKESWAP_V3 = "pancakeswap-v3",
+  VELODROME = "velodrome",
+  AERODROME = "aerodrome",
 }
 
 export enum ChainId {
@@ -43,19 +45,27 @@ export interface Token {
   chainId: ChainId;
 }
 
+export type TierType = "fee" | "tickSpacing";
+
+export interface PoolTier {
+  type: TierType;
+  value: number;
+  display: string;
+}
+
 export interface PriceResult {
   amountIn: string;
   amountOut: string;
   price: number;
   formatted: string;
-  feeTier: number;
+  poolTier: PoolTier;
   chainId: ChainId;
   gasEstimate: string;
   priceImpact: number;
 }
 
-export interface FeeTierQuote {
-  feeTier: number;
+export interface PoolQuote {
+  poolTier: PoolTier;
   amountOut: bigint;
   price: number;
   formatted: string;

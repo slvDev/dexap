@@ -1,5 +1,5 @@
 import { PublicClient } from "viem";
-import { Token, PriceResult } from "../types";
+import { Token, PriceResult, PoolTier } from "../types";
 import { IDexAdapter, DexConfig } from "./types";
 
 export abstract class BaseDexAdapter implements IDexAdapter {
@@ -14,12 +14,12 @@ export abstract class BaseDexAdapter implements IDexAdapter {
     amountIn: bigint
   ): Promise<PriceResult>;
 
-  abstract getQuoteForFeeTier(
+  abstract getQuoteForPoolParam(
     client: PublicClient,
     tokenIn: Token,
     tokenOut: Token,
     amountIn: bigint,
-    feeTier: number
+    poolParam: number
   ): Promise<PriceResult | null>;
 
   protected validateTokens(tokenIn: Token, tokenOut: Token): void {
@@ -36,5 +36,17 @@ export abstract class BaseDexAdapter implements IDexAdapter {
     if (tokenIn.chainId !== tokenOut.chainId) {
       throw new Error("TokenIn and TokenOut must be on the same chain");
     }
+  }
+
+  protected createPoolTier(value: number): PoolTier {
+    const type = this.config.tierType;
+    return {
+      type,
+      value,
+      display:
+        type === "fee"
+          ? `${(value / 10000).toFixed(2)}% fee`
+          : `tickSpacing: ${value}`,
+    };
   }
 }

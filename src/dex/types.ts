@@ -1,5 +1,5 @@
 import { PublicClient } from "viem";
-import { ChainId, Token, PriceResult, DexType } from "../types";
+import { ChainId, Token, PriceResult, DexType, TierType } from "../types";
 
 export interface DexProtocol {
   type: DexType;
@@ -12,7 +12,8 @@ export interface DexConfig {
   chainId: ChainId;
   quoterAddress: `0x${string}`;
   factoryAddress?: `0x${string}`;
-  feeTiers: number[];
+  tiers: number[];
+  tierType: TierType;
 }
 
 export interface IDexAdapter {
@@ -26,11 +27,11 @@ export interface IDexAdapter {
     amountIn: bigint
   ): Promise<PriceResult>;
 
-  getQuoteForFeeTier?(
+  getQuoteForPoolParam(
     client: PublicClient,
     tokenIn: Token,
     tokenOut: Token,
     amountIn: bigint,
-    feeTier: number
+    poolParam: number
   ): Promise<PriceResult | null>;
 }
