@@ -53,7 +53,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     name: "Optimism",
     wrappedNativeSymbol: "WETH",
     explorerUrl: "https://optimistic.etherscan.io",
-    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3],
+    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3, DexType.VELODROME],
     publicRpcUrl: "https://mainnet.optimism.io",
   },
   [ChainId.BASE]: {
@@ -62,7 +62,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     name: "Base",
     wrappedNativeSymbol: "WETH",
     explorerUrl: "https://basescan.org",
-    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3, DexType.PANCAKESWAP_V3],
+    supportedDexes: [DexType.UNISWAP_V3, DexType.SUSHISWAP_V3, DexType.PANCAKESWAP_V3, DexType.AERODROME],
     publicRpcUrl: "https://mainnet.base.org",
   },
   [ChainId.ZORA]: {
