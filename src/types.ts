@@ -1,5 +1,3 @@
-export type TokenRegistry = Record<ChainId, Partial<Record<string, Token>>>;
-
 export enum DexType {
   UNISWAP_V3 = "uniswap-v3",
   SUSHISWAP_V3 = "sushiswap-v3",
@@ -37,12 +35,12 @@ export type ChainKey =
   | "worldchain"
   | "soneium";
 
-export interface Token {
-  name: string;
+export type TokenInput = string | TokenInfo;
+
+export interface TokenInfo {
   symbol: string;
-  decimals: number;
   address: `0x${string}`;
-  chainId: ChainId;
+  decimals: number;
 }
 
 export type TierType = "fee" | "tickSpacing";
@@ -97,8 +95,8 @@ export interface AggregatedPrice {
   max: number;
   best: PriceResult & { dexType: DexType };
   all: Array<PriceResult & { dexType: DexType }>;
-  tokenIn: Token;
-  tokenOut: Token;
+  tokenIn: TokenInfo;
+  tokenOut: TokenInfo;
   chainId: ChainId;
   timestamp: number;
 }
