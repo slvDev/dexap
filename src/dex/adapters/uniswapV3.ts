@@ -1,5 +1,5 @@
 import { PublicClient, formatUnits, parseEther } from "viem";
-import { Token, PriceResult, PoolQuote, QuoterV2Response } from "../../types";
+import { TokenInfo, PriceResult, PoolQuote, QuoterV2Response } from "../../types";
 import { uniQuoterAbi } from "../../abis/quoter";
 import { BaseDexAdapter } from "../base";
 
@@ -8,8 +8,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
   private readonly SPOT_REFERENCE_AMOUNT = parseEther("0.001");
 
   private buildQuoteContract(
-    tokenIn: Token,
-    tokenOut: Token,
+    tokenIn: TokenInfo,
+    tokenOut: TokenInfo,
     amountIn: bigint,
     fee: number
   ) {
@@ -47,12 +47,10 @@ export class UniswapV3Adapter extends BaseDexAdapter {
 
   async getQuote(
     client: PublicClient,
-    tokenIn: Token,
-    tokenOut: Token,
+    tokenIn: TokenInfo,
+    tokenOut: TokenInfo,
     amountIn: bigint
   ): Promise<PriceResult> {
-    this.validateTokens(tokenIn, tokenOut);
-
     const fees = this.config.tiers;
 
     // Query all fee tiers using multicall + spot price queries for price impact
@@ -137,13 +135,11 @@ export class UniswapV3Adapter extends BaseDexAdapter {
 
   async getQuoteForPoolParam(
     client: PublicClient,
-    tokenIn: Token,
-    tokenOut: Token,
+    tokenIn: TokenInfo,
+    tokenOut: TokenInfo,
     amountIn: bigint,
     fee: number
   ): Promise<PriceResult | null> {
-    this.validateTokens(tokenIn, tokenOut);
-
     const res = await client.multicall({
       contracts: [
         this.buildQuoteContract(tokenIn, tokenOut, amountIn, fee),

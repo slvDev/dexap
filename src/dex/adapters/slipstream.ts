@@ -1,5 +1,5 @@
 import { PublicClient, formatUnits, parseEther } from "viem";
-import { Token, PriceResult, PoolQuote, QuoterV2Response } from "../../types";
+import { TokenInfo, PriceResult, PoolQuote, QuoterV2Response } from "../../types";
 import { slipQuoterAbi } from "../../abis/quoter";
 import { BaseDexAdapter } from "../base";
 
@@ -8,8 +8,8 @@ export class SlipstreamAdapter extends BaseDexAdapter {
   private readonly SPOT_REFERENCE_AMOUNT = parseEther("0.001");
 
   private buildQuoteContract(
-    tokenIn: Token,
-    tokenOut: Token,
+    tokenIn: TokenInfo,
+    tokenOut: TokenInfo,
     amountIn: bigint,
     tickSpacing: number
   ) {
@@ -47,12 +47,10 @@ export class SlipstreamAdapter extends BaseDexAdapter {
 
   async getQuote(
     client: PublicClient,
-    tokenIn: Token,
-    tokenOut: Token,
+    tokenIn: TokenInfo,
+    tokenOut: TokenInfo,
     amountIn: bigint
   ): Promise<PriceResult> {
-    this.validateTokens(tokenIn, tokenOut);
-
     const tickSpacings = this.config.tiers;
 
     // Query all tick spacings using multicall + spot price queries for price impact
@@ -137,13 +135,11 @@ export class SlipstreamAdapter extends BaseDexAdapter {
 
   async getQuoteForPoolParam(
     client: PublicClient,
-    tokenIn: Token,
-    tokenOut: Token,
+    tokenIn: TokenInfo,
+    tokenOut: TokenInfo,
     amountIn: bigint,
     tickSpacing: number
   ): Promise<PriceResult | null> {
-    this.validateTokens(tokenIn, tokenOut);
-
     const res = await client.multicall({
       contracts: [
         this.buildQuoteContract(tokenIn, tokenOut, amountIn, tickSpacing),
