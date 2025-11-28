@@ -2,7 +2,7 @@ import { createPublicClient, http, parseUnits, PublicClient } from "viem";
 import {
   ChainId,
   ChainKey,
-  Token,
+  TokenInput,
   PriceResult,
   DexType,
   AggregatedPrice,
@@ -12,6 +12,7 @@ import { getViemChain } from "../utils/viemChains";
 import { getAlchemyUrl, getInfuraUrl } from "./providers";
 import { createAllDexAdapters, createDexAdapter } from "../dex";
 import { calculateAggregatedPrice } from "../utils/aggregation";
+import { resolveToken } from "../tokens";
 
 export interface ClientConfig {
   alchemyKey?: string;
@@ -72,38 +73,41 @@ export class Client {
   }
 
   async getPrice(
-    tokenIn: Token,
-    tokenOut: Token,
+    tokenIn: TokenInput,
+    tokenOut: TokenInput,
     amountIn: string,
+    chainId: ChainId,
     dexType: DexType
   ): Promise<PriceResult> {
-    const client = this.getClient(tokenIn.chainId);
-    const dexAdapter = createDexAdapter(tokenIn.chainId, dexType);
-    const amountInWei = parseUnits(amountIn, tokenIn.decimals);
-    const quote = await dexAdapter.getQuote(
-      client,
-      tokenIn,
-      tokenOut,
-      amountInWei
-    );
-    return quote;
+    const resolvedIn = resolveToken(tokenIn, chainId);
+    const resolvedOut = resolveToken(tokenOut, chainId);
+
+    const client = this.getClient(chainId);
+    const dexAdapter = createDexAdapter(chainId, dexType);
+    const amountInWei = parseUnits(amountIn, resolvedIn.decimals);
+
+    return dexAdapter.getQuote(client, resolvedIn, resolvedOut, amountInWei);
   }
 
   async getPricesFromAllDexes(
-    tokenIn: Token,
-    tokenOut: Token,
-    amountIn: string
+    tokenIn: TokenInput,
+    tokenOut: TokenInput,
+    amountIn: string,
+    chainId: ChainId
   ): Promise<Array<PriceResult & { dexType: DexType }>> {
-    const client = this.getClient(tokenIn.chainId);
-    const amountInWei = parseUnits(amountIn, tokenIn.decimals);
-    const adapters = createAllDexAdapters(tokenIn.chainId);
+    const resolvedIn = resolveToken(tokenIn, chainId);
+    const resolvedOut = resolveToken(tokenOut, chainId);
+
+    const client = this.getClient(chainId);
+    const amountInWei = parseUnits(amountIn, resolvedIn.decimals);
+    const adapters = createAllDexAdapters(chainId);
 
     const results = await Promise.allSettled(
       adapters.map(async (adapter) => {
         const result = await adapter.getQuote(
           client,
-          tokenIn,
-          tokenOut,
+          resolvedIn,
+          resolvedOut,
           amountInWei
         );
         return { ...result, dexType: adapter.config.protocol.type };
@@ -114,19 +118,24 @@ export class Client {
   }
 
   async getBestPrice(
-    tokenIn: Token,
-    tokenOut: Token,
-    amountIn: string
+    tokenIn: TokenInput,
+    tokenOut: TokenInput,
+    amountIn: string,
+    chainId: ChainId
   ): Promise<PriceResult & { dexType: DexType }> {
+    const resolvedIn = resolveToken(tokenIn, chainId);
     const prices = await this.getPricesFromAllDexes(
       tokenIn,
       tokenOut,
-      amountIn
+      amountIn,
+      chainId
     );
 
     if (prices.length === 0) {
       throw new Error(
-        `No prices found for ${tokenIn.symbol}/${tokenOut.symbol} on chain ${tokenIn.chainId}`
+        `No prices found for ${resolvedIn.symbol}/${
+          typeof tokenOut === "string" ? tokenOut : tokenOut.symbol
+        } on chain ${chainId}`
       );
     }
 
@@ -136,18 +145,28 @@ export class Client {
   }
 
   async getAggregatedPrice(
-    tokenIn: Token,
-    tokenOut: Token,
+    tokenIn: TokenInput,
+    tokenOut: TokenInput,
     amountIn: string,
+    chainId: ChainId,
     filterOutliers: boolean = true
   ): Promise<AggregatedPrice> {
+    const resolvedIn = resolveToken(tokenIn, chainId);
+    const resolvedOut = resolveToken(tokenOut, chainId);
+
     const quotes = await this.getPricesFromAllDexes(
       tokenIn,
       tokenOut,
-      amountIn
+      amountIn,
+      chainId
     );
 
-    return calculateAggregatedPrice(quotes, tokenIn, tokenOut, filterOutliers);
+    return calculateAggregatedPrice(
+      quotes,
+      resolvedIn,
+      resolvedOut,
+      filterOutliers
+    );
   }
 }
 

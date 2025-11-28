@@ -1,4 +1,4 @@
-import { createClient, getToken, ChainId, DexType } from "../index";
+import { createClient, ChainId, DexType } from "../index";
 
 async function main() {
   console.log("Testing multiple token pairs on Ethereum...\n");
@@ -7,7 +7,7 @@ async function main() {
     alchemyKey: "API_KEY",
   });
 
-  // Define pairs to test
+  // Define pairs to test - just use symbol strings now!
   const pairs: [string, string][] = [
     ["WETH", "USDC"],
     ["WETH", "USDT"],
@@ -17,28 +17,15 @@ async function main() {
     ["WSTETH", "WETH"],
   ];
 
-  // Resolve tokens
-  const resolvedPairs = pairs.map(([inSym, outSym]) => ({
-    tokenIn: getToken(inSym, ChainId.ETHEREUM),
-    tokenOut: getToken(outSym, ChainId.ETHEREUM),
-    label: `${inSym}/${outSym}`,
-  }));
-
-  // Check all tokens exist
-  for (const { tokenIn, tokenOut, label } of resolvedPairs) {
-    if (!tokenIn || !tokenOut) {
-      console.error(`Token not found for pair: ${label}`);
-      return;
-    }
-  }
-
   // Fetch all prices in parallel
   const results = await Promise.allSettled(
-    resolvedPairs.map(async ({ tokenIn, tokenOut, label }) => {
+    pairs.map(async ([tokenIn, tokenOut]) => {
+      const label = `${tokenIn}/${tokenOut}`;
       const result = await client.getPrice(
-        tokenIn!,
-        tokenOut!,
+        tokenIn,
+        tokenOut,
         "1",
+        ChainId.ETHEREUM,
         DexType.UNISWAP_V3
       );
       return { label, result };

@@ -27,10 +27,11 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "viem": "^2.39.0"
+  "peerDependencies": {
+    "viem": "^2.0.0"
   },
   "devDependencies": {
+    "viem": "^2.39.0",
     "@types/node": "^24.10.1",
     "tsup": "^8.5.1",
     "tsx": "^4.20.6",

@@ -1,9 +1,9 @@
-import { AggregatedPrice, DexType, PriceResult, Token } from "../types";
+import { AggregatedPrice, DexType, PriceResult, TokenInfo } from "../types";
 
 export function calculateAggregatedPrice(
   quotes: Array<PriceResult & { dexType: DexType }>,
-  tokenIn: Token,
-  tokenOut: Token,
+  tokenIn: TokenInfo,
+  tokenOut: TokenInfo,
   filterOutliersEnabled: boolean = true
 ): AggregatedPrice {
   if (quotes.length === 0) {
@@ -55,7 +55,7 @@ export function calculateAggregatedPrice(
     all: filteredQuotes,
     tokenIn,
     tokenOut,
-    chainId: tokenIn.chainId,
+    chainId: quotes[0].chainId,
     timestamp: Date.now(),
   };
 }

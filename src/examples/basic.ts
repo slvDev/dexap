@@ -1,4 +1,4 @@
-import { createClient, getToken, ChainId, DexType } from "../index";
+import { createClient, ChainId, DexType } from "../index";
 
 async function main() {
   console.log("Fetching WETH/USDC prices from specific DEXes...\n");
@@ -8,10 +8,12 @@ async function main() {
   });
 
   try {
+    // New simplified API - just use symbol strings!
     const result = await client.getPrice(
-      getToken("WETH", ChainId.ETHEREUM)!,
-      getToken("USDC", ChainId.ETHEREUM)!,
+      "WETH",
+      "USDC",
       "1",
+      ChainId.ETHEREUM,
       DexType.UNISWAP_V3
     );
 
@@ -24,9 +26,10 @@ async function main() {
     console.log("Price Impact:", `${result.priceImpact.toFixed(4)}%\n`);
 
     const resultSushi = await client.getPrice(
-      getToken("WETH", ChainId.ETHEREUM)!,
-      getToken("USDC", ChainId.ETHEREUM)!,
+      "WETH",
+      "USDC",
       "1",
+      ChainId.ETHEREUM,
       DexType.SUSHISWAP_V3
     );
 
@@ -39,9 +42,10 @@ async function main() {
     console.log("Price Impact:", `${resultSushi.priceImpact.toFixed(4)}%\n`);
 
     const resultVelodrome = await client.getPrice(
-      getToken("WETH", ChainId.OPTIMISM)!,
-      getToken("USDC", ChainId.OPTIMISM)!,
+      "WETH",
+      "USDC",
       "1",
+      ChainId.OPTIMISM,
       DexType.VELODROME
     );
     console.log("\n[Optimism - Velodrome Slipstream V3]");
@@ -56,9 +60,10 @@ async function main() {
     );
 
     const resultAerodrome = await client.getPrice(
-      getToken("WETH", ChainId.BASE)!,
-      getToken("USDC", ChainId.BASE)!,
+      "WETH",
+      "USDC",
       "1",
+      ChainId.BASE,
       DexType.AERODROME
     );
     console.log("\n[Base - Aerodrome Slipstream V3]");
