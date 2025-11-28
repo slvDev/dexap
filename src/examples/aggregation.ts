@@ -1,4 +1,4 @@
-import { ChainId, getToken, createClient } from "..";
+import { ChainId, createClient } from "..";
 
 async function main() {
   console.log("Price Aggregation Example\n");
@@ -8,18 +8,16 @@ async function main() {
     alchemyKey: "API_KEY",
   });
 
-  // Get tokens - testing on Base with multiple DEXes
-  const weth = getToken("WETH", ChainId.BASE);
-  const usdc = getToken("USDC", ChainId.BASE);
-
-  if (!weth || !usdc) {
-    throw new Error("Tokens not found");
-  }
-
   try {
     // 1. Get aggregated price from all DEXes (without filtering)
     console.log("1. Aggregated Price (without filtering):");
-    const agg = await client.getAggregatedPrice(weth, usdc, "1.0", false);
+    const agg = await client.getAggregatedPrice(
+      "WETH",
+      "USDC",
+      "1.0",
+      ChainId.BASE,
+      false
+    );
 
     console.log(`   Average: $${agg.average}`);
     console.log(`   Median:  $${agg.median}`);
@@ -44,7 +42,12 @@ async function main() {
 
     // 3. With outlier filtering (default behavior)
     console.log("3. With Outlier Filtering (default):");
-    const filtered = await client.getAggregatedPrice(weth, usdc, "1.0");
+    const filtered = await client.getAggregatedPrice(
+      "WETH",
+      "USDC",
+      "1.0",
+      ChainId.BASE
+    );
     console.log(
       `   Quotes used: ${filtered.all.length} out of ${agg.all.length}`
     );
@@ -59,7 +62,7 @@ async function main() {
     console.log(`   Save ${savings.toFixed(2)}% vs worst DEX`);
     console.log(`   Price spread: ${spread.toFixed(2)}%`);
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("Error:", error);
   }
 }
 

@@ -1,4 +1,4 @@
-import { createClient, getToken, ChainId } from "../index";
+import { createClient, ChainId } from "../index";
 
 async function main() {
   console.log("Multi-DEX Price Comparison Example\n");
@@ -7,12 +7,14 @@ async function main() {
     alchemyKey: "API_KEY",
   });
 
-  const weth = getToken("WETH", ChainId.ETHEREUM)!;
-  const usdc = getToken("USDC", ChainId.ETHEREUM)!;
-
   // Use case 1: When you need ALL prices (for comparison UI, analytics)
   console.log("Use case 1: Get all DEX prices for comparison\n");
-  const allPrices = await client.getPricesFromAllDexes(weth, usdc, "1");
+  const allPrices = await client.getPricesFromAllDexes(
+    "WETH",
+    "USDC",
+    "1",
+    ChainId.ETHEREUM
+  );
   for (const price of allPrices) {
     console.log(
       `  ${price.dexType}: ${
@@ -25,7 +27,12 @@ async function main() {
 
   // Use case 2: When you ONLY need best price (simpler API, same RPC cost)
   console.log("Use case 2: Get only the best price\n");
-  const bestPrice = await client.getBestPrice(weth, usdc, "1");
+  const bestPrice = await client.getBestPrice(
+    "WETH",
+    "USDC",
+    "1",
+    ChainId.ETHEREUM
+  );
   console.log(`  Best: ${bestPrice.formatted}`);
   console.log(`  DEX: ${bestPrice.dexType}`);
   console.log(`  Pool Tier: ${bestPrice.poolTier.display}`);

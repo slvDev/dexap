@@ -1,4 +1,4 @@
-import { createClient, getToken } from "..";
+import { createClient } from "..";
 import { getChainName, getSupportedChainIds } from "../chains";
 import { ChainId, DexType } from "../types";
 
@@ -18,20 +18,6 @@ async function main() {
     alchemyKey: "API_KEY",
   });
 
-  // Or configure with your own RPC URLs using chain keys:
-  // const client = createClient({
-  //   rpcUrls: {
-  //     mainnet: "https://custom.mainnet.rpc.com",
-  //     polygon: "https://custom.polygon.rpc.com",
-  //   },
-  // });
-
-  // Or use Alchemy/Infura:
-  // const client = createClient({
-  //   alchemyKey: "your-alchemy-key",
-  //   infuraKey: "your-infura-key",
-  // });
-
   console.log(`\nWETH/USDC Prices Across Chains (for ${AMOUNT_IN} WETH):`);
   const testChains = [
     ChainId.ETHEREUM,
@@ -45,14 +31,13 @@ async function main() {
 
   const prices = await Promise.allSettled(
     testChains.map(async (chainId) => {
-      const weth = getToken("WETH", chainId)!;
-      const usdc = getToken("USDC", chainId)!;
-
       try {
+        // New simplified API - just use symbol strings!
         const quote = await client.getPrice(
-          weth,
-          usdc,
+          "WETH",
+          "USDC",
           AMOUNT_IN,
+          chainId,
           DexType.UNISWAP_V3
         );
 
