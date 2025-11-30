@@ -52,6 +52,8 @@ export interface PoolTier {
 }
 
 export interface PriceResult {
+  tokenIn: TokenInfo;
+  tokenOut: TokenInfo;
   amountIn: string;
   amountOut: string;
   price: number;
