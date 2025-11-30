@@ -123,7 +123,6 @@ export class Client {
     amountIn: string,
     chainId: ChainId
   ): Promise<PriceResult & { dexType: DexType }> {
-    const resolvedIn = resolveToken(tokenIn, chainId);
     const prices = await this.getPricesFromAllDexes(
       tokenIn,
       tokenOut,
@@ -132,10 +131,10 @@ export class Client {
     );
 
     if (prices.length === 0) {
+      const resolvedIn = resolveToken(tokenIn, chainId);
+      const resolvedOut = resolveToken(tokenOut, chainId);
       throw new Error(
-        `No prices found for ${resolvedIn.symbol}/${
-          typeof tokenOut === "string" ? tokenOut : tokenOut.symbol
-        } on chain ${chainId}`
+        `No prices found for ${resolvedIn.symbol}/${resolvedOut.symbol} on chain ${chainId}`
       );
     }
 
@@ -151,15 +150,23 @@ export class Client {
     chainId: ChainId,
     filterOutliers: boolean = true
   ): Promise<AggregatedPrice> {
-    const resolvedIn = resolveToken(tokenIn, chainId);
-    const resolvedOut = resolveToken(tokenOut, chainId);
-
     const quotes = await this.getPricesFromAllDexes(
       tokenIn,
       tokenOut,
       amountIn,
       chainId
     );
+
+    if (quotes.length === 0) {
+      const resolvedIn = resolveToken(tokenIn, chainId);
+      const resolvedOut = resolveToken(tokenOut, chainId);
+      throw new Error(
+        `No prices found for ${resolvedIn.symbol}/${resolvedOut.symbol} on chain ${chainId}`
+      );
+    }
+
+    const resolvedIn = quotes[0].tokenIn;
+    const resolvedOut = quotes[0].tokenOut;
 
     return calculateAggregatedPrice(
       quotes,

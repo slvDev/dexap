@@ -122,6 +122,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
     );
 
     return {
+      tokenIn,
+      tokenOut,
       amountIn: amountIn.toString(),
       amountOut: best.amountOut.toString(),
       price: best.price,
@@ -177,6 +179,8 @@ export class UniswapV3Adapter extends BaseDexAdapter {
     const poolTier = this.createPoolTier(fee);
 
     return {
+      tokenIn,
+      tokenOut,
       amountIn: amountIn.toString(),
       amountOut: amountOut.toString(),
       price,
