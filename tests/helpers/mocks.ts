@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 import type { PublicClient } from "viem";
 import { ChainId, DexType, PriceResult, PoolTier } from "../../src/types";
+import { MOCK_TOKENS } from "./fixtures";
 
 export function createMockPublicClient(
   overrides: Partial<PublicClient> = {}
@@ -27,6 +28,8 @@ export function createMockPriceResult(
   overrides: Partial<PriceResult> = {}
 ): PriceResult {
   return {
+    tokenIn: MOCK_TOKENS.WETH,
+    tokenOut: MOCK_TOKENS.USDC,
     amountIn: "1000000000000000000",
     amountOut: "2000000000",
     price: 2000,
