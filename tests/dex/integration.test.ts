@@ -4,6 +4,7 @@ import {
   isDexSupported,
   createDexAdapter,
   getChainDexConfigs,
+  getDexConfig,
 } from "../../src/dex";
 import { DEX_CONFIGS } from "../../src/dex/registry";
 import { getChainConfig, getAllChainConfigs } from "../../src/chains";
@@ -131,13 +132,12 @@ describe("dex integration", () => {
 
   describe("cross-module error handling", () => {
     it("getDexConfig errors are informative", () => {
-      try {
-        const chainId = ChainId.ETHEREUM;
-        const dexType = DexType.VELODROME;
-        getSupportedDexTypes(chainId);
-      } catch (error) {
-        expect((error as Error).message).toBeTruthy();
-      }
+      const chainId = ChainId.ETHEREUM;
+      const unsupportedDex = DexType.VELODROME;
+
+      expect(() => getDexConfig(chainId, unsupportedDex)).toThrow(
+        /DEX .* not configured for chain/
+      );
     });
   });
 

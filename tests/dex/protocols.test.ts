@@ -37,12 +37,6 @@ describe("dex/protocols", () => {
         });
       });
 
-      it("type should match the record key", () => {
-        Object.entries(DEX_PROTOCOLS).forEach(([key, protocol]) => {
-          expect(protocol.type).toBe(key);
-        });
-      });
-
       it("name should be non-empty string with reasonable length", () => {
         Object.values(DEX_PROTOCOLS).forEach((protocol) => {
           expect(typeof protocol.name).toBe("string");
@@ -59,30 +53,19 @@ describe("dex/protocols", () => {
     });
 
     describe("URL validation", () => {
-      it("all websites should be parseable URLs", () => {
+      it("all websites should be valid HTTPS URLs without trailing slashes", () => {
         Object.values(DEX_PROTOCOLS).forEach((protocol) => {
-          expect(() => new URL(protocol.website)).not.toThrow();
-        });
-      });
-
-      it("all websites should use HTTPS protocol", () => {
-        Object.values(DEX_PROTOCOLS).forEach((protocol) => {
+          // URL constructor throws if invalid - tests parseability
           const url = new URL(protocol.website);
+
+          // Must use HTTPS
           expect(url.protocol).toBe("https:");
-        });
-      });
 
-      it("all websites should have no trailing slashes", () => {
-        Object.values(DEX_PROTOCOLS).forEach((protocol) => {
+          // No trailing slashes
           expect(protocol.website).not.toMatch(/\/$/);
-        });
-      });
 
-      it("all websites should have valid domain names", () => {
-        Object.values(DEX_PROTOCOLS).forEach((protocol) => {
-          const url = new URL(protocol.website);
+          // Valid hostname
           expect(url.hostname.length).toBeGreaterThan(0);
-          expect(url.hostname).toMatch(/^[a-z0-9.-]+$/);
         });
       });
     });

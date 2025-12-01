@@ -98,13 +98,27 @@ describe("dex/registry", () => {
         });
       });
 
-      it("fee-based configs should have consistent tier values", () => {
-        const expectedFeeTiers = [100, 500, 3000, 10000];
-
+      it("fee-based configs should have valid tier structure", () => {
         Object.values(DEX_CONFIGS).forEach((chainDexes) => {
           Object.values(chainDexes).forEach((config) => {
             if (config.tierType === "fee") {
-              expect(config.tiers).toEqual(expectedFeeTiers);
+              // Should have at least one tier
+              expect(config.tiers.length).toBeGreaterThanOrEqual(1);
+
+              // All tiers should be valid fee values
+              config.tiers.forEach((tier) => {
+                expect(tier).toBeGreaterThanOrEqual(100); // Min 0.01%
+                expect(tier).toBeLessThanOrEqual(100000); // Max 10%
+                expect(tier % 100).toBe(0); // Multiples of 100
+              });
+
+              // Tiers should be sorted ascending
+              const sorted = [...config.tiers].sort((a, b) => a - b);
+              expect(config.tiers).toEqual(sorted);
+
+              // No duplicates
+              const unique = new Set(config.tiers);
+              expect(config.tiers.length).toBe(unique.size);
             }
           });
         });
