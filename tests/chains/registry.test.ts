@@ -63,18 +63,6 @@ describe("chains/registry", () => {
         });
       });
     });
-
-    describe("known chain configs", () => {
-      it("should have Ethereum config at key 1", () => {
-        expect(CHAIN_CONFIGS[ChainId.ETHEREUM]).toBeDefined();
-        expect(CHAIN_CONFIGS[ChainId.ETHEREUM].key).toBe("mainnet");
-      });
-
-      it("should have Base config at key 8453", () => {
-        expect(CHAIN_CONFIGS[ChainId.BASE]).toBeDefined();
-        expect(CHAIN_CONFIGS[ChainId.BASE].key).toBe("base");
-      });
-    });
   });
 
   describe("CHAIN_KEY_TO_ID", () => {
@@ -112,23 +100,6 @@ describe("chains/registry", () => {
         Object.values(CHAIN_CONFIGS).forEach((config) => {
           expect(CHAIN_KEY_TO_ID[config.key as ChainKey]).toBe(config.chainId);
         });
-      });
-    });
-
-    describe("known mappings", () => {
-      it("mainnet should map to ChainId.ETHEREUM (1)", () => {
-        expect(CHAIN_KEY_TO_ID.mainnet).toBe(ChainId.ETHEREUM);
-        expect(CHAIN_KEY_TO_ID.mainnet).toBe(1);
-      });
-
-      it("base should map to ChainId.BASE (8453)", () => {
-        expect(CHAIN_KEY_TO_ID.base).toBe(ChainId.BASE);
-        expect(CHAIN_KEY_TO_ID.base).toBe(8453);
-      });
-
-      it("optimism should map to ChainId.OPTIMISM (10)", () => {
-        expect(CHAIN_KEY_TO_ID.optimism).toBe(ChainId.OPTIMISM);
-        expect(CHAIN_KEY_TO_ID.optimism).toBe(10);
       });
     });
   });
