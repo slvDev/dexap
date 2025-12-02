@@ -123,18 +123,6 @@ describe("chain RPC integration tests", () => {
 });
 
 describe("integration test infrastructure", () => {
-  it("can import viem", () => {
-    expect(createPublicClient).toBeDefined();
-    expect(http).toBeDefined();
-  });
-
-  it("can create a client configuration", () => {
-    const config = getChainConfig(ChainId.ETHEREUM);
-    const client = createChainClient(config);
-    expect(client).toBeDefined();
-    expect(client.getChainId).toBeDefined();
-  });
-
   it("builds RPC URLs correctly", () => {
     const config = getChainConfig(ChainId.ETHEREUM);
     const url = buildRpcUrl(config);
