@@ -1,6 +1,6 @@
 {
   "name": "dexap",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Decentralized price queries from DEX liquidity pools across multiple EVM chains and protocols",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
