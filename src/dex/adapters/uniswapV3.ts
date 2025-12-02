@@ -1,5 +1,10 @@
 import { PublicClient, formatUnits, parseEther } from "viem";
-import { TokenInfo, PriceResult, PoolQuote, QuoterV2Response } from "../../types";
+import {
+  TokenInfo,
+  PriceResult,
+  PoolQuote,
+  QuoterV2Response,
+} from "../../types";
 import { uniQuoterAbi } from "../../abis/quoter";
 import { BaseDexAdapter } from "../base";
 
@@ -115,10 +120,6 @@ export class UniswapV3Adapter extends BaseDexAdapter {
 
     const best = validQuotes.reduce((best, current) =>
       current.amountOut > best.amountOut ? current : best
-    );
-
-    console.log(
-      `[${this.config.protocol.name}] Found ${validQuotes.length} pools for ${tokenIn.symbol}/${tokenOut.symbol}, best: ${best.poolTier.display}`
     );
 
     return {

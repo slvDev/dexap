@@ -1,7 +1,7 @@
 {
-  "name": "unnamed-project",
+  "name": "dexap",
   "version": "0.1.0",
-  "description": "",
+  "description": "Decentralized price queries from DEX liquidity pools across multiple EVM chains and protocols",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -25,10 +25,43 @@
     "example:multi": "tsx src/examples/multi-pairs.ts",
     "example:multi-chain": "tsx src/examples/multi-chain-usage.ts",
     "example:token-manager": "tsx src/examples/token-manager.ts",
-    "example:aggregation": "tsx src/examples/aggregation.ts"
+    "example:aggregation": "tsx src/examples/aggregation.ts",
+    "prepublishOnly": "npm run build && npm run test",
+    "preversion": "npm run test",
+    "postversion": "git push && git push --tags"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "web3",
+    "defi",
+    "dex",
+    "price",
+    "aggregator",
+    "uniswap",
+    "velodrome",
+    "aerodrome",
+    "slipstream",
+    "ethereum",
+    "base",
+    "optimism",
+    "arbitrum",
+    "polygon",
+    "multichain",
+    "evm",
+    "viem",
+    "typescript"
+  ],
+  "author": "Slava S.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/slvDev/dexap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/slvDev/dexap/issues"
+  },
+  "homepage": "https://github.com/slvDev/dexap#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "license": "MIT",
   "peerDependencies": {
     "viem": "^2.0.0"
